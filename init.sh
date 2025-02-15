@@ -9,3 +9,4 @@ ln -sf $HOME/.dotfiles/tmux.conf $HOME/.tmux.conf
 
 ln -sf $HOME/.dotfiles/config/hypr $HOME/.config/
 ln -sf $HOME/.dotfiles/config/nvim $HOME/.config/
+ln -sf $HOME/.dotfiles/scripts $HOME/

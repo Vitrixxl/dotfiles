@@ -1,3 +1,10 @@
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
 
 
   # ... (ASCII art and other configurations)
@@ -18,7 +25,7 @@
   export PATH="$HOME/.script:$PATH"
   export PATH="/usr/local/go/bin:$PATH"  # Append to PATH, don't overwrite
 
-  export BROWSER=firefox
+   export BROWSER="flatpak run app.zen_browser.zen"
 
   # Zinit plugins
   zinit ice depth=1; zinit light romkatv/powerlevel10k
@@ -57,7 +64,7 @@
   alias setnvim='setnvimup.sh'
 
   # Homebrew initialization
-  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+  # eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
   # Initialize fzf if available
   if command -v fzf &> /dev/null; then
