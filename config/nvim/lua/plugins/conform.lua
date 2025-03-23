@@ -21,6 +21,14 @@ return {
 				black = {
 					command = "black",
 				},
+
+				go = {
+					command = "gofmt",
+				},
+				dart = {
+					command = "dart",
+					args = { "format" },
+				},
 			},
 			formatters_by_ft = {
 				lua = { "stylua" },
@@ -36,6 +44,9 @@ return {
 				zig = { "zig" },
 				prisma = { "prettierd" },
 				python = { "black" },
+				go = { "gofmt" },
+				rust = { "rustfmt" },
+				dart = { "dart" },
 			},
 			format_on_save = {
 				enabled = true,

@@ -1,0 +1,6 @@
+{
+  "comment block": {
+    "prefix": "cmmb",
+    "body": ["/**", "* ${1}", "*/"]
+  }
+}

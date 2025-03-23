@@ -2,42 +2,43 @@ require("config.lazy")
 
 local vim = vim
 
-vim.cmd("set expandtab")
-vim.cmd("set tabstop=2")
-vim.cmd("set softtabstop=2")
-vim.cmd("set shiftwidth=2")
--- vim.lsp.start_client({
---     name = 'dartls',            -- Nom du serveur
---     -- cmd = { '~/development/flutter/bin/dart', 'language-server', '--protocol=lsp' }, -- Commande pour démarrer le serveur
---     root_dir = vim.fn.getcwd(), -- Utiliser le répertoire actuel comme racine
---     capabilities = vim.lsp.protocol.make_client_capabilities(),
--- })
+-- Indentation
+vim.opt.expandtab = true
+vim.opt.tabstop = 2
+vim.opt.softtabstop = 2
+vim.opt.shiftwidth = 2
+
+-- Désactiver l'autocomplétion SQL par défaut
 vim.g.loaded_sql_completion = 1
 vim.g.omni_sql_no_default_maps = 1
 
--- Configuration des popups dans Neovim
-vim.api.nvim_set_hl(0, "NormalFloat", {
-	bg = "#1e1e2e", -- Couleur de fond plus sombre
-	fg = "#bac2de", -- Couleur du texte plus claire
-})
+-- Apparence
+vim.opt.pumblend = 0 -- Désactiver la transparence du popup
+vim.opt.cursorline = true -- Surligner la ligne actuelle
 
-vim.api.nvim_set_hl(0, "FloatBorder", {
-	bg = "#1e1e2e",
-	fg = "#89b4fa", -- Bordure bleue
-})
-vim.api.nvim_set_hl(0, "ErrorBorder", {
-	bg = "#1e1e2e",
-	fg = "#f38ba8",
-})
+-- Curseur
+vim.cmd([[
+  highlight Cursor guifg=NONE guibg=#E06C75
+  highlight iCursor guifg=NONE guibg=#E06C75
+  set guicursor=n-v-c:block-Cursor
+  set guicursor+=i:ver25-iCursor
+  colorscheme onedark
+]])
+--
+-- Popup et fenêtres flottantes
+local hl = vim.api.nvim_set_hl
 
--- Configuration globale des fenêtres flottantes
-vim.opt.pumblend = 0 -- Transparence du popup (0-100)
+hl(0, "Normal", { bg = "#282C34", fg = "#ABB2BF" }) -- Fond général
+hl(0, "NormalFloat", { bg = "#282C34", fg = "#ABB2BF" }) -- Fond des fenêtres flottantes (comme Telescope)
+hl(0, "FloatBorder", { bg = "#282C34", fg = "#61AFEF" }) -- Bordures bleues
+hl(0, "Pmenu", { bg = "#21252B", fg = "#ABB2BF" }) -- Menu popup
+hl(0, "CursorLine", { bg = "#2C323C" }) -- Ligne actuelle
+hl(0, "LspInlayHint", { fg = "#5C6370", bg = "NONE", italic = true }) -- Inlay hints LSP
+hl(0, "Visual", { bg = "#3E4452", fg = "NONE" })
 
--- Configuration des bordures et du style pour les popups LSP
+-- LSP Handlers
 vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
-
 	focusable = true,
-
 	border = {
 		{ "╭", "FloatBorder" },
 		{ "─", "FloatBorder" },
@@ -50,7 +51,6 @@ vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
 	},
 })
 
--- Configuration du positionnement du popup
 vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
 	border = {
 		{ "╭", "FloatBorder" },
@@ -70,54 +70,26 @@ vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.s
 	max_height = 20,
 })
 
+-- Diagnostics
 vim.diagnostic.config({
+	virtual_text = false,
+	signs = true,
+	underline = true,
+	update_in_insert = false,
 	float = {
+		source = "always",
 		border = {
-			{ "╭" },
-			{ "─" },
-			{ "╮" },
-			{ "│" },
-			{ "╯" },
-			{ "─" },
-			{ "╰" },
-			{ "│" },
-		},
-		focusable = true,
-		style = "minimal",
-	},
-})
-vim.diagnostic.config({
-	virtual_text = false, -- Désactiver le texte virtuel si encombrant
-	signs = true, -- Afficher les icônes à gauche des lignes
-	underline = true, -- Souligner les lignes avec des diagnostics
-	update_in_insert = false, -- Évite les diagnostics pendant l'insertion
-	float = {
-		source = "always", -- Ajoute la source à chaque diagnostic
-		border = {
-			{ "╭", "ErrorBorder" },
-			{ "─", "ErrorBorder" },
-			{ "╮", "ErrorBorder" },
-			{ "│", "ErrorBorder" },
-			{ "╯", "ErrorBorder" },
-			{ "─", "ErrorBorder" },
-			{ "╰", "ErrorBorder" },
-			{ "│", "ErrorBorder" },
+			{ "╭", "FloatBorder" },
+			{ "─", "FloatBorder" },
+			{ "╮", "FloatBorder" },
+			{ "│", "FloatBorder" },
+			{ "╯", "FloatBorder" },
+			{ "─", "FloatBorder" },
+			{ "╰", "FloatBorder" },
+			{ "│", "FloatBorder" },
 		},
 		format = function(diagnostic)
 			return string.format("%s [%s]", diagnostic.message, diagnostic.source)
 		end,
 	},
 })
-
-vim.cmd([[
-  highlight Cursor guifg=NONE guibg=#eb6f92
-  highlight iCursor guifg=NONE guibg=#eb6f92
-  set guicursor=n-v-c:block-Cursor
-  set guicursor+=i:ver25-iCursor
-  highlight Pmenu guifg=#ffffff guibg=#000000
-]])
-vim.cmd("colorscheme terafox")
-vim.g.lightline = { colorscheme = "terafox" }
-vim.cmd([[
-  highlight LspInlayHint guifg=#666666 guibg=NONE gui=italic
-]])

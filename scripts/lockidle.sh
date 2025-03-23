@@ -1,8 +1,7 @@
 #!/bin/bash
 
-if pgrep -x "hyprlock" > /dev/null; then
-    
+if pgrep -x "swaylock" > /dev/null; then
     systemctl suspend
 else
-    hyprlock
+    swaylock
 fi

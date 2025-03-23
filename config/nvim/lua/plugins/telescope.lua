@@ -4,12 +4,11 @@ return {
 
 	config = function()
 		require("telescope").setup({
-			defaults = {
-				file_ignore_patterns = { "node_modules/.*" },
-			},
+			winbled = 0,
 			pickers = {
 				find_files = {
 					theme = "dropdown",
+					hidden = true,
 				},
 			},
 			extensions = {

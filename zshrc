@@ -1,3 +1,4 @@
+fortune | cowsay -f small
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -24,8 +25,14 @@ fi
   export PATH="/var/lib/flatpak/exports/share/applications:$PATH"
   export PATH="$HOME/.script:$PATH"
   export PATH="/usr/local/go/bin:$PATH"  # Append to PATH, don't overwrite
+  export PATH="$HOME/.cargo/bin:$PATH"
+  export PATH="/home/vitrix/.bun/bin:$PATH"
+  export PATH="$HOME/.flutter/flutter/bin:$PATH"
+  export PATH="/home/vitrix/.flutter/flutter/bin:$PATH"
+  export PATH="/home/vitrix/.postman/Postman/Postman:$PATH"
 
-   export BROWSER="flatpak run app.zen_browser.zen"
+
+  export BROWSER="firefox"
 
   # Zinit plugins
   zinit ice depth=1; zinit light romkatv/powerlevel10k
