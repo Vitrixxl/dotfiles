@@ -14,6 +14,7 @@ ln -sf  $HOME/.dotfiles/config/hypr $HOME/.config/
 ls -sf  $HOME/.dotfiles/config/rofi $HOME/.config/
 ln -sf  $HOME/.dotfiles/config/nvim $HOME/.config/
 ls -sf  $HOME/.dotfiles/config/waybar $HOME/.config/
+ls -sf  $HOME/.dotfiles/config/swaylock $HOME/.config/
 mkdir -p $HOME/.scripts
 ln -sf $HOME/.dotfiles/scripts/* $HOME/.scripts/
 

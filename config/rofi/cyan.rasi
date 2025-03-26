@@ -1,0 +1,12 @@
+* {
+  background : black / 50%;
+  inputbg:transparent;
+  
+  accent: #055662;
+  foreground:#fff;
+  primary:#76DDE5;
+  primarymuted:#76DDE5;
+  element-background : #76DDE530;
+  border:#28A4B6;
+}
+
