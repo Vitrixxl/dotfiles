@@ -1,2 +1,2 @@
 #!/bin/bash
-echo "Theme"
+echo -e "Cyan\nPurple\nGreen" | rofi -dmenu

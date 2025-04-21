@@ -58,11 +58,11 @@
     "tooltip-format-disconnected": "Error",
     "tooltip-format-wifi": "{essid} ({signalStrength}%) ",
     "tooltip-format-ethernet": "{ifname} 🖧 ",
-    "on-click": "kitty nmtui",
+    "on-click": "kitty iwctl",
   },
   "bluetooth": {
     "format-on": "<span font='13'></span>",
-    "format-connected-battery": "{device_battery_percentage}% 󰂯",
+    "format-connected-battery": "{device_name}% 󰂯",
     "on-click": "blueman-manager",
   },
   "battery": {

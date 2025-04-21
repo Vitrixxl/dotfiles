@@ -1,0 +1,12 @@
+* {
+  background : #022028;
+  inputbg:transparent;
+  
+  accent: #055662;
+  foreground:#fff;
+  primary:#E18948;
+  primarymuted:#E1894890;
+  element-background : #E1894830;
+  border:#E18948;
+}
+

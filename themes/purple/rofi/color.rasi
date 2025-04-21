@@ -1,0 +1,13 @@
+* {
+  background : #1F0E3B;
+  inputbg:transparent;
+  
+  accent: #055662;
+  foreground:#fff;
+  primary:#F28FBB;
+  primarymuted:#F28FBB;
+  element-background : #F28FBB30;
+  border:#F28FBB;
+}
+
+

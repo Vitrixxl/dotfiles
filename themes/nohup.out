@@ -1,0 +1,24 @@
+[LOG] Welcome to hyprpaper!
+built from commit  ()
+[LOG] Cleaned old hyprpaper preloads (3), removing 101.6MB
+[LOG] Preloaded target /home/vitrix/.dotfiles/config/hypr/bg.jpg in 147.14ms -> Pixel size: [2912, 1632]
+[LOG] Buffer created for target /home/vitrix/.dotfiles/config/hypr/bg.jpg, Shared Memory usage: 74.6MB
+[LOG] Total SM usage for all buffers: 74.6MB
+[LOG] hyprpaper socket started at /run/user/1000/hypr/5ee35f914f921e5696030698e74fb5566a804768_1742991218_1254417656/.hyprpaper.sock (fd: 4)
+[LOG] configure for eDP-1
+[LOG] configure for eDP-1
+[LOG] Buffer created for target /home/vitrix/.dotfiles/config/hypr/bg.jpg, Shared Memory usage: 8.3MB
+[LOG] Total SM usage for all buffers: 82.9MB
+[LOG] Image data for eDP-1: /home/vitrix/.dotfiles/config/hypr/bg.jpg at [-5.33, 0.00], scale: 0.66 (original image size: [2912, 1632])
+[LOG] Rendering splash: "my win11 install runs hyprland that is true" - raf
+[LOG] Splash color: 55ffffff
+[LOG] Splash font size: 21, pos: 1127.56, 1578.20
+[LOG] Submitting viewport dest size 1920x1080 for 5de592dc7d80
+[LOG] handlePreferredScale: 1.50 for 5de592dc7d80
+[LOG] Buffer created for target /home/vitrix/.dotfiles/config/hypr/bg.jpg, Shared Memory usage: 18.7MB
+[LOG] Total SM usage for all buffers: 101.6MB
+[LOG] Image data for eDP-1: /home/vitrix/.dotfiles/config/hypr/bg.jpg at [-5.33, 0.00], scale: 0.99 (original image size: [2912, 1632])
+[LOG] Rendering splash: "my win11 install runs hyprland that is true" - raf
+[LOG] Splash color: 55ffffff
+[LOG] Splash font size: 21, pos: 1235.51, 1579.21
+[LOG] Submitting viewport dest size 1920x1080 for 5de592dc7d80
