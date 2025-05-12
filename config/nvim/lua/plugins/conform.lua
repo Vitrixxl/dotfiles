@@ -40,7 +40,7 @@ return {
                 json = { "prettierd" },
                 jsonc = { "prettierd" },
                 javascriptreact = { "biome" },
-                typescriptreact = { "biome" },
+                typescriptreact = { "deno" },
                 -- markdown = { "deno_fmt" },
                 zig = { "zig" },
                 prisma = { "prettierd" },

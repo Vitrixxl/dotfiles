@@ -38,11 +38,11 @@ else
     case "$C2" in 
         "region")
             notify-send "Recording" "Recording has started"
-            wf-recorder -a  $QUALITY_OPTS -f $FILEPATH -o "$default_screen" -g "$(slurp)"
+            wf-recorder -a  $QUALITY_OPTS -f $FILEPATH -g "$(slurp)"
             ;;
         "full screen")
             notify-send "Recording" "Recording has started"
-            wf-recorder -a $QUALITY_OPTS -f $FILEPATH -o "$default_screen"
+            wf-recorder -a $QUALITY_OPTS -f $FILEPATH 
             ;;
     esac
 fi

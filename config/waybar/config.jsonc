@@ -5,6 +5,7 @@
   "modules-left": ["custom/arch", "hyprland/workspaces"],
   "modules-center": ["clock"],
   "modules-right": [
+    "cpu",
     "wireplumber",
     "bluetooth",
     "network",
@@ -45,6 +46,12 @@
   "custom/arch": {
     "tooltip": false,
     "format": "󰣇",
+  },
+
+  "cpu": {
+    "interval": 1,
+    "format": "{}% ",
+    "max-length": 10,
   },
   "clock": {
     "format": "{:%I:%M}",

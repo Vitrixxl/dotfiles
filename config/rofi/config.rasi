@@ -24,8 +24,8 @@ configuration {
   text-color:#fff;
 }
 window {
-    location:                    north;
-    anchor:                      north;
+    location:                    center;
+    anchor:                      center;
     x-offset:                    0px;
     y-offset:                    12px;
     width:500px; 
@@ -95,7 +95,7 @@ entry {
 listview {
     enabled:                     true;
     columns:                     1;
-    lines:                       3;
+    lines:                       5;
     cycle:                       true;
     dynamic:                     true;
     scrollbar:                   false;
