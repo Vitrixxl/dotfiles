@@ -1,54 +1,99 @@
 return {
-    {
-        "williamboman/mason.nvim",
-        config = function() require("mason").setup() end,
-    },
-    {
-        "williamboman/mason-lspconfig",
-        config = function()
-            require("mason-lspconfig").setup({
-                ensure_installed = {
-                    "lua_ls",
-                    "ts_ls",
-                    "tailwindcss",
-                    "cssls",
-                    "rust_analyzer",
-                    "gopls",
-                    "zls",
-                    "pyright",
-                },
-                automatic_installation = true,
-            })
-        end,
-    },
+    -- {
+    --     "williamboman/mason.nvim",
+    --     config = function() require("mason").setup() end,
+    -- },
+    -- {
+    --     "williamboman/mason-lspconfig",
+    --     config = function()
+    --         require("mason-lspconfig").setup({
+    --             ensure_installed = {
+    --                 "lua_ls",
+    --                 "tailwindcss",
+    --                 "cssls",
+    --                 "rust_analyzer",
+    --                 "gopls",
+    --                 "pyright",
+    --             },
+    --             automatic_installation = true,
+    --         })
+    --     end,
+    -- },
     {
         "neovim/nvim-lspconfig",
-        dependencies = { "saghen/blink.cmp" },
-        opts = {
-            servers = {
-                clangd = {},
-                pyright = {},
-                cssls = {},
-                zls = {},
-                lua_ls = {},
-                ts_ls = {},
-                tailwindcss = {},
-                rust_analyzer = {},
-                gopls = {},
-                prismals = {},
-                -- dcm = {},
-                -- tsgo = {},
-            },
-        },
-        config = function(_, opts)
+        config = function()
             local lspconfig = require("lspconfig")
-            local capabilities = require("blink.cmp").get_lsp_capabilities()
+            local servers = {
+                pyright = {},
+                lua_ls = {},
+                ts_ls = {
+                    cmd = {
+                        "npx",
+                        "typescript-language-server",
+                        "--stdio",
+                    },
+                    root_dir = function() return vim.loop.cwd() end,
+                },
+                cssls = {
+                    cmd = {
+                        "vscode-css-language-server",
+                        "--stdio",
+                    },
+                    filetypes = { "css", "scss", "less" },
+                },
+                gopls = {},
+                rust_analyzer = {
+                    cmd = { "rust-analyzer" },
+                    filetypes = { "rust" },
+                    root_dir = require("lspconfig.util").root_pattern(
+                        "Cargo.toml",
+                        "Cargo.lock"
+                    ),
+                    settings = {
+                        ["rust-analyzer"] = {
+                            cargo = {
+                                allFeatures = true,
+                            },
+                            procMacro = {
+                                enable = true,
+                            },
+                        },
+                    },
+                },
 
-            for server, config in pairs(opts.servers) do
+                tailwindcss = {
+                    cmd = {
+                        "npx",
+                        "tailwindcss-language-server",
+                        "--stdio",
+                    },
+                    filetypes = {
+                        "html",
+                        "css",
+                        "scss",
+                        "javascript",
+                        "javascriptreact",
+                        "typescript",
+                        "typescriptreact",
+                        "vue",
+                    },
+                    root_dir = lspconfig.util.root_pattern(
+                        "tailwind.config.js",
+                        "package.json"
+                    ),
+                    settings = {},
+                },
+            }
+            local capabilities = require("cmp_nvim_lsp").default_capabilities()
+            for server_name, config in pairs(servers) do
+                -- Si pas de config, on crée une table vide
+                config = config or {}
+                -- On ajoute/merge la config générique
                 config.capabilities = capabilities
-                lspconfig[server].setup(config)
-            end
 
+                -- Setup du serveur
+                lspconfig[server_name].setup(config)
+            end
             -- Handlers LSP avec bordures
             vim.lsp.handlers["textDocument/hover"] =
                 vim.lsp.with(vim.lsp.handlers.hover, { border = "rounded" })

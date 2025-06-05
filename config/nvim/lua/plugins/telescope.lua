@@ -24,7 +24,7 @@ return {
                 fzf = {},
             },
         })
-        require("telescope").load_extension("fzf")
+        -- require("telescope").load_extension("fzf")
         local builtin = require("telescope.builtin")
 
         vim.keymap.set(

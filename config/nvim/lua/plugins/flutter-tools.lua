@@ -8,11 +8,11 @@ return {
     },
     config = function()
         require("flutter-tools").setup({
-            flutter_path = "~/development/flutter/bin/flutter",
-            dart_sdk_path = "~/development/flutter/bin/cache/dart-sdk",
+            flutter_path = "/usr/bin/flutter",
+            dart_sdk_path = "/opt/flutter/bin/dart",
             lsp = {
                 cmd = {
-                    "/home/vitrix/development/flutter/bin/dart",
+                    "/opt/flutter/bin/dart",
                     "language-server",
                     "--protocol=lsp",
                 },

@@ -27,7 +27,7 @@ return {
                     command = "gofmt",
                 },
                 dart = {
-                    command = "dart",
+                    command = "/opt/flutter/bin/dart",
                     args = { "format" },
                 },
             },

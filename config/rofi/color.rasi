@@ -1,12 +1,9 @@
 * {
-  background : #151515;
-  inputbg:transparent;
-  
-  accent: #b9b5be;
-  foreground:#fff;
-  primary:#b9b5be;
-  primarymuted:#b9b5be;
-  element-background : #76DDE530;
-  border:#28A4B6;
+    background:     #0f0f0f;
+    background-alt: #1A1B26FF;
+    foreground:     #edecee;
+    unselected : #a277ff;
+    selected:       #61ffca;
+    active:         #b9b5beFF;
+    urgent:         #F7768EFF;
 }
-

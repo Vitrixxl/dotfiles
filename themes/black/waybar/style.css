@@ -2,7 +2,6 @@
   min-height: 0;
   min-width: 0;
   font-family: "JetBrainsMono NFP";
-  font-size: 16px;
   font-weight: 600;
 }
 
@@ -21,11 +20,10 @@ window#waybar.hidden {
 .modules-left {
   margin: 0px 12px;
   margin-top: 8px;
-  border-radius: 18px;
 }
 
 #custom-arch {
-  font-size: 28px;
+  font-size: 18px;
   border: 1px solid #b9b5be;
   background-color: #151515;
   color: #b9b5be;
@@ -42,15 +40,16 @@ window#waybar.hidden {
   border: 1px solid #b9b5be;
   background-color: #151515;
   color: #b9b5be;
-  border-radius: 12px;
+  border-radius: 100px;
   padding: 0px 18px;
   margin: 0px 0px 0px 8px;
+  font-size: 14px;
 }
 #workspaces button.active {
   background-color: #151515;
   border: 1px solid #b9b5be;
   color: #b9b5be;
-  font-size: 28px;
+  font-size: 22px;
   padding: 0px 40px;
 }
 
@@ -103,3 +102,4 @@ window#waybar.hidden {
 .modules-center {
   margin-top: 8px;
 }
+

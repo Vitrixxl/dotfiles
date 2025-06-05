@@ -71,6 +71,7 @@ fi
 
   # Aliases
   alias ls='ls --color'
+  alias cat="vcat"
   alias nv='nvim'
   alias sm='soundmixer.sh'
   alias setnvim='setnvimup.sh'
@@ -95,15 +96,21 @@ export PATH="$HOME/development/flutter/bin:$PATH"
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 export PATH=$PATH:$(go env GOPATH)/bin
+export PATH="$HOME/.bun/bin:$PATH"
+export PATH="$HOME/.my-linux/bin:$PATH"
+
 
 eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
 
 
 # pnpm
-export PNPM_HOME="/home/vitrix/.local/share/pnpm"
+export PNPM_HOME="$HOME/.local/share/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
+
+# bun completions
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
