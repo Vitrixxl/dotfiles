@@ -8,7 +8,6 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 
-bindkey -e
 
   ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
   if [ ! -d "$ZINIT_HOME" ]; then
@@ -76,6 +75,7 @@ fi
   alias nv='nvim'
   alias sm='soundmixer.sh'
   alias setnvim='setnvimup.sh'
+  alias sqlite3="sqlite3 --cmd '.mode box'"
 
   # Homebrew initialization
   # eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
@@ -96,9 +96,12 @@ fi
 export PATH="$HOME/development/flutter/bin:$PATH"
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
 export PATH=$PATH:$(go env GOPATH)/bin
 export PATH="$HOME/.bun/bin:$PATH"
 export PATH="$HOME/.my-linux/bin:$PATH"
+
 
 
 eval "$(pyenv init --path)"

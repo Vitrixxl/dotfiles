@@ -23,8 +23,25 @@ return {
         "neovim/nvim-lspconfig",
         config = function()
             local lspconfig = require("lspconfig")
+            local util = require("lspconfig.util")
+
+            local function get_python_path(workspace)
+                local venv = workspace .. "/venv/bin/python"
+                if vim.fn.executable(venv) == 1 then return venv end
+                return vim.fn.exepath("python3")
+            end
+
             local servers = {
-                pyright = {},
+                pyright = {
+                    root_dir = util.root_pattern("manage.py", ".git"),
+                    before_init = function(_, config)
+                        config.settings = config.settings or {}
+                        config.settings.python = config.settings.python or {}
+                        config.settings.python.pythonPath =
+                            get_python_path(config.root_dir)
+                    end,
+                },
+
                 lua_ls = {},
                 ts_ls = {
                     cmd = {
