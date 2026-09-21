@@ -41,7 +41,7 @@ PACKAGES=(
     mpv mpvpaper
     # Captures et enregistrement d'écran (hypr-helper, hypr-screenshot, niri-record)
     jq grim slurp wl-clipboard wf-recorder
-    # Neovim : plugins (git), treesitter (tree-sitter-cli + gcc), LSP
+    # Neovim : plugins (git), treesitter (tree-sitter-cli + gcc), LSP (ceux de Vue passent par bun)
     neovim git gcc tree-sitter-cli ripgrep fd
     go gopls "bun|bun-bin" "lua-language-server|lua-language-server-git"
     # Compilation de hypr-screenshot et wifi-gui
@@ -99,6 +99,25 @@ install_deps() {
         info "Installation de gopls via go install"
         go install golang.org/x/tools/gopls@latest || warn "gopls non installé."
     fi
+
+    install_bun_lsp
+}
+
+# Serveurs LSP Vue 3 de Neovim : pas de node ici, bun les installe (dans ~/.bun)
+# et les lance (cf. config/nvim/lua/lsp.lua).
+BUN_LSP=(@vue/language-server @vtsls/language-server)
+
+install_bun_lsp() {
+    local bun pkg todo=()
+    bun="$(command -v bun || true)"
+    [ -z "$bun" ] && [ -x "$HOME/.bun/bin/bun" ] && bun="$HOME/.bun/bin/bun"
+    [ -z "$bun" ] && { warn "bun introuvable : serveurs LSP Vue non installés."; return; }
+    for pkg in "${BUN_LSP[@]}"; do
+        [ -d "$HOME/.bun/install/global/node_modules/$pkg" ] || todo+=("$pkg")
+    done
+    [ ${#todo[@]} -eq 0 ] && return
+    info "bun add -g : ${todo[*]}"
+    "$bun" add -g "${todo[@]}" || warn "Serveurs LSP Vue non installés."
 }
 
 # ── Audio ────────────────────────────────────────────────────────────────────
