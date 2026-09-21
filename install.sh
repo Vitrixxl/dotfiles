@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Installe les dépendances de ces dotfiles et pose les symlinks.
-# Cible : Artix / Arch (pacman + AUR).
+# Cible : Arch Linux (fonctionne aussi sur Artix).
 #
 #   ./install.sh              tout faire
 #   ./install.sh --no-deps    ne pas installer de paquets
@@ -27,7 +27,8 @@ warn() { printf '\033[1;33m!!\033[0m %s\n' "$*" >&2; }
 
 # ── Paquets ──────────────────────────────────────────────────────────────────
 # yay est installé en premier, puis il installe tout (dépôts et AUR).
-# "a|b" : a s'il existe dans les dépôts, sinon b depuis l'AUR.
+# Sur Arch, seuls mpvpaper, arc-gtk-theme et les polices Geist viennent de l'AUR.
+# "a|b" : a s'il existe dans les dépôts (Arch), sinon b depuis l'AUR (Artix).
 PACKAGES=(
     # Session Hyprland
     hyprland hyprlock hyprsunset hyprtoolkit
@@ -42,7 +43,7 @@ PACKAGES=(
     jq grim slurp wl-clipboard wf-recorder
     # Neovim : plugins (git), treesitter (tree-sitter-cli + gcc), LSP
     neovim git gcc tree-sitter-cli ripgrep fd
-    go "bun|bun-bin" "lua-language-server|lua-language-server-git"
+    go gopls "bun|bun-bin" "lua-language-server|lua-language-server-git"
     # Compilation de hypr-screenshot
     rust
     # Thème GTK, curseur, polices
@@ -64,7 +65,7 @@ install_deps() {
     command -v pacman >/dev/null || { warn "pacman introuvable : installe les paquets à la main."; return; }
     ensure_yay                                         # yay d'abord, tout le reste passe par lui
 
-    local todo=() entry name fallback
+    local todo=() entry name fallback need_go_gopls=0
     for entry in "${PACKAGES[@]}"; do
         name="${entry%%|*}"; fallback="${entry##*|}"
         if pacman -Qq "$name" >/dev/null 2>&1 || pacman -Qq "$fallback" >/dev/null 2>&1; then
@@ -73,6 +74,9 @@ install_deps() {
             continue                                   # rustup déjà en place
         elif [ "$name" = bun ] && command -v bun >/dev/null; then
             continue
+        elif [ "$name" = gopls ]; then                 # paquet sur Arch, go install sinon
+            if command -v gopls >/dev/null || [ -x "$(go env GOPATH 2>/dev/null)/bin/gopls" ]; then continue; fi
+            if pacman -Si gopls >/dev/null 2>&1; then todo+=(gopls); else need_go_gopls=1; fi
         elif [[ "$name" = otf-geist* ]] && fc-list : family 2>/dev/null | grep -i 'Geist' >/dev/null; then
             continue                                   # police déjà installée à la main
         elif [ "$name" = "$fallback" ] || pacman -Si "$name" >/dev/null 2>&1; then
@@ -89,11 +93,22 @@ install_deps() {
         info "Tous les paquets sont déjà installés."
     fi
 
-    # gopls n'est ni dans les dépôts Artix ni dans l'AUR.
-    if ! command -v gopls >/dev/null && [ ! -x "$(go env GOPATH 2>/dev/null)/bin/gopls" ]; then
-        info "Installation de gopls"
+    if [ "$need_go_gopls" = 1 ]; then
+        info "Installation de gopls via go install"
         go install golang.org/x/tools/gopls@latest || warn "gopls non installé."
     fi
+}
+
+# ── Audio ────────────────────────────────────────────────────────────────────
+# Avec systemd (Arch), pipewire, pipewire-pulse et wireplumber sont des services
+# utilisateur. Sans systemd (Artix), c'est config/pipewire + Hyprland qui les lancent.
+has_systemd() { [ -d /run/systemd/system ]; }
+
+setup_audio() {
+    has_systemd || return 0
+    info "Activation des services utilisateur pipewire"
+    systemctl --user enable --now pipewire.socket pipewire-pulse.socket wireplumber.service \
+        || warn "Services pipewire non activés (pas de session utilisateur ?)."
 }
 
 # ── Symlinks ─────────────────────────────────────────────────────────────────
@@ -115,6 +130,9 @@ link() {                                  # link <source dans le repo> <cible>
 install_links() {
     local d
     for d in "$DOTFILES"/config/*; do
+        if [ "$(basename "$d")" = pipewire ] && has_systemd; then
+            continue                                   # config réservée aux systèmes sans systemd
+        fi
         link "$d" "$HOME/.config/$(basename "$d")"
     done
     for d in "$DOTFILES"/bin/*; do
@@ -139,7 +157,7 @@ build_screenshot() {
     install -m755 "$dir/native/target/release/hypr-screenshot-native" "$dir/hypr-screenshot-native"
 }
 
-[ "$do_deps"  = 1 ] && install_deps
+[ "$do_deps"  = 1 ] && { install_deps; setup_audio; }
 [ "$do_links" = 1 ] && install_links
 [ "$do_build" = 1 ] && build_screenshot
 

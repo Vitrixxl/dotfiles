@@ -10,9 +10,12 @@ git clone https://github.com/Vitrixxl/dotfiles.git ~/dotfiles
 ~/dotfiles/install.sh
 ```
 
-Le script cible Artix et Arch. Il installe `yay`, puis toutes les dépendances avec `yay`.
+Le script cible Arch Linux et fonctionne aussi sur Artix. Il installe `yay`, puis toutes les dépendances avec `yay`.
 Il pose ensuite les symlinks et compile `hypr-screenshot`. Un fichier déjà présent est
 déplacé dans `~/.dotfiles-backup/`, jamais écrasé. Le script peut être relancé sans risque.
+
+Sur un système avec systemd, la config `pipewire` du repo n'est pas liée : le script active les
+services utilisateur pipewire à la place.
 
 Options : `--no-deps`, `--no-links`, `--no-build`.
 
