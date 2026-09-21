@@ -1,0 +1,5 @@
+# hypr-screenshot : seuls les sources sont versionnés
+hypr-screenshot/native/target/
+hypr-screenshot/hypr-screenshot-native
+hypr-screenshot/backups/
+hypr-screenshot/__pycache__/

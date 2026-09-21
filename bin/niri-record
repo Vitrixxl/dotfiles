@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Toggle d'enregistrement d'ecran pour niri (wf-recorder + slurp).
+#
+#   1er appui -> demande "Ecran entier" / "Zone" via fuzzel, puis lance wf-recorder.
+#   2e appui  -> arrete l'enregistrement en cours et notifie le chemin du fichier.
+
+set -uo pipefail
+
+pidfile="${XDG_RUNTIME_DIR:-/tmp}/niri-record.pid"
+outdir="$HOME/videos"
+
+notify() { command -v notify-send >/dev/null && notify-send -a niri-record "$@"; }
+
+# --- Arret : un enregistrement tourne deja ---
+if [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null; then
+    pid=$(cat "$pidfile")
+    outfile=$(cat "${pidfile}.file" 2>/dev/null)
+
+    kill -INT "$pid"
+    # wf-recorder finalise le mux (moov atom) apres SIGINT, on attend qu'il quitte.
+    for _ in $(seq 1 50); do
+        kill -0 "$pid" 2>/dev/null || break
+        sleep 0.1
+    done
+
+    rm -f "$pidfile" "${pidfile}.file"
+
+    if [ -n "$outfile" ] && [ -s "$outfile" ]; then
+        notify "Enregistrement termine" "Sauvegarde : $outfile"
+    else
+        notify -u critical "Enregistrement termine" "Fichier introuvable ou vide"
+    fi
+    exit 0
+fi
+
+# --- Demarrage : choix de la zone ---
+choice=$(printf 'Ecran entier\nZone' | fuzzel --dmenu -p "Enregistrer : ") || exit 0
+[ -z "$choice" ] && exit 0
+
+geom_args=()
+if [ "$choice" = "Zone" ]; then
+    geom=$(slurp) || exit 0
+    [ -z "$geom" ] && exit 0
+    geom_args=(-g "$geom")
+fi
+
+mkdir -p "$outdir"
+outfile="$outdir/recording-$(date +%Y-%m-%d_%H-%M-%S).mp4"
+
+wf-recorder "${geom_args[@]}" -f "$outfile" >/tmp/niri-record.log 2>&1 &
+pid=$!
+
+# Verifie que wf-recorder a bien demarre (evite un pidfile fantome).
+sleep 0.3
+if ! kill -0 "$pid" 2>/dev/null; then
+    notify -u critical "Echec du demarrage de l'enregistrement" "Voir /tmp/niri-record.log"
+    exit 1
+fi
+
+echo "$pid" >"$pidfile"
+echo "$outfile" >"${pidfile}.file"
+notify "Enregistrement demarre" "$choice"

@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Actions niri sans équivalent natif Hyprland.
+#   move-or-ws down|up     déplace la fenêtre dans la pile, sinon vers le workspace suivant/précédent
+#   focus first|last       focus la fenêtre la plus à gauche / droite du workspace
+#   move first|last        pousse la fenêtre active tout à gauche / droite
+#   preset width|height [reset]   cycle 1/3 → 1/2 → 2/3 de l'écran, ou remet à 1/2
+#   swap-floating-focus    bascule le focus entre flottant et tuilé
+set -uo pipefail
+
+active()  { hyprctl activewindow -j; }
+clients() { hyprctl clients -j; }
+
+case "${1:-}" in
+move-or-ws)
+    dir=$([ "$2" = down ] && echo d || echo u)
+    before=$(active | jq -c '.at')
+    hyprctl dispatch movewindow "$dir" >/dev/null
+    after=$(active | jq -c '.at')
+    if [ "$before" = "$after" ]; then
+        [ "$2" = down ] && hyprctl dispatch movetoworkspace r+1 >/dev/null \
+                        || hyprctl dispatch movetoworkspace r-1 >/dev/null
+    fi
+    ;;
+focus)
+    ws=$(hyprctl activeworkspace -j | jq '.id')
+    sort=$([ "$2" = first ] && echo 'sort_by(.at[0]) | first' || echo 'sort_by(.at[0]) | last')
+    addr=$(clients | jq -r "[.[] | select(.workspace.id == $ws and .floating == false and .mapped)] | $sort | .address")
+    [ -n "$addr" ] && [ "$addr" != null ] && hyprctl dispatch focuswindow "address:$addr" >/dev/null
+    ;;
+move)
+    dir=$([ "$2" = first ] && echo l || echo r)
+    for _ in $(seq 1 10); do
+        before=$(active | jq -c '.at')
+        hyprctl dispatch movewindow "$dir" >/dev/null
+        [ "$(active | jq -c '.at')" = "$before" ] && break
+    done
+    ;;
+preset)
+    win=$(active)
+    mon=$(hyprctl monitors -j | jq ".[] | select(.id == $(echo "$win" | jq '.monitor'))")
+    if [ "$2" = width ]; then
+        cur=$(echo "$win" | jq '.size[0]')
+        full=$(echo "$mon" | jq '(.width / .scale) - .reserved[0] - .reserved[2]')
+    else
+        cur=$(echo "$win" | jq '.size[1]')
+        full=$(echo "$mon" | jq '(.height / .scale) - .reserved[1] - .reserved[3]')
+    fi
+    if [ "${3:-}" = reset ]; then
+        target=$(jq -n --argjson f "$full" '$f / 2 | floor')
+    else
+        target=$(jq -n --argjson c "$cur" --argjson f "$full" '
+            [0.33333, 0.5, 0.66667] as $p
+            | ($c / $f) as $r
+            | ([$p[] | select(. > $r + 0.03)] | first) // $p[0]
+            | . * $f | floor')
+    fi
+    delta=$((target - cur))
+    [ "$2" = width ] && hyprctl dispatch resizeactive "$delta" 0 >/dev/null \
+                     || hyprctl dispatch resizeactive 0 "$delta" >/dev/null
+    ;;
+swap-floating-focus)
+    if [ "$(active | jq '.floating')" = true ]; then
+        hyprctl dispatch cyclenext tiled >/dev/null
+    else
+        hyprctl dispatch cyclenext floating >/dev/null
+    fi
+    ;;
+*)
+    echo "usage: $0 {move-or-ws down|up|focus first|last|move first|last|preset width|height|swap-floating-focus}" >&2
+    exit 1
+    ;;
+esac

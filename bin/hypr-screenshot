@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Native Rust / Wayland / OpenGL ES picker. No GTK, Qt, Python or Node runtime.
+exec "$HOME/.local/share/hypr-screenshot/hypr-screenshot-native" "$@"
