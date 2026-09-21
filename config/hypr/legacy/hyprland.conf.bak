@@ -1,0 +1,246 @@
+# Hyprland config — traduction de ~/.config/niri/config.kdl
+# Sans les binds molette pour changer de workspace.
+
+$mod = SUPER
+$term = foot
+$menu = fuzzel
+$helper = ~/.local/bin/hypr-helper
+
+# ── Moniteurs ────────────────────────────────────────────────────────────────
+monitor = eDP-1, 2560x1600@240, 0x0, 1.25
+monitor = HDMI-A-1, 1920x1080@144, auto-right, 1
+monitor = , preferred, auto, 1
+
+# ── Environnement ────────────────────────────────────────────────────────────
+env = XDG_CURRENT_DESKTOP,Hyprland
+env = XDG_SESSION_TYPE,wayland
+env = XDG_SESSION_DESKTOP,Hyprland
+env = ELECTRON_OZONE_PLATFORM_HINT,auto
+env = QT_QPA_PLATFORM,wayland;xcb
+env = QT_WAYLAND_DISABLE_WINDOWDECORATION,1
+
+xwayland {
+    enabled = true
+    # Apps X11 rendues à l'échelle 1 puis agrandies par Hyprland : évite le flou et
+    # les fenêtres mal dimensionnées avec le scale 1.25 (AnyDesk, etc.).
+    force_zero_scaling = true
+}
+
+# ── Démarrage ────────────────────────────────────────────────────────────────
+exec-once = pipewire
+exec-once = waybar
+exec-once = mpvpaper -o "no-audio loop panscan=1.0" "*" "$HOME/Wallpapers/window-view-pixel-moewalls-com.mp4"
+exec-once = hyprsunset
+
+# ── Entrées ──────────────────────────────────────────────────────────────────
+input {
+    kb_layout = fr
+    numlock_by_default = true
+    follow_mouse = 1
+    touchpad {
+        tap-to-click = true
+        natural_scroll = true
+    }
+}
+
+# Gestes touchpad : balayage horizontal à 3 doigts = changer de workspace
+gesture = 3, horizontal, workspace
+
+# ── Apparence (niri : gaps 0, focus-ring off, border off, coins carrés) ──────
+general {
+    gaps_in = 0
+    gaps_out = 0
+    border_size = 0
+    layout = dwindle
+}
+
+decoration {
+    rounding = 0
+    shadow {
+        enabled = false
+    }
+    blur {
+        enabled = false
+    }
+}
+
+animations {
+    enabled = true
+    bezier = quick, 0.2, 0.8, 0.2, 1.0
+    animation = global, 1, 2, quick
+    animation = windows, 1, 2, quick, popin 90%
+    animation = fade, 1, 1.5, quick
+    animation = workspaces, 1, 2, quick, slide
+    animation = border, 0
+    animation = layers, 1, 1.5, quick, fade
+}
+
+dwindle {
+    preserve_split = true
+}
+
+misc {
+    disable_hyprland_logo = true
+    disable_splash_rendering = true
+    force_default_wallpaper = 0
+}
+
+# ── Règles de fenêtres ───────────────────────────────────────────────────────
+windowrule = float on, match:class ^(firefox)$, match:title ^(Picture-in-Picture)$
+windowrule = opacity 0.9 0.9, match:class ^(foot)$
+
+# ── Binds ────────────────────────────────────────────────────────────────────
+# Apps
+bind = $mod, Return, exec, $term
+bind = $mod, D, exec, $menu
+bind = $mod, Space, exec, $menu
+bind = $mod, E, exec, thunar
+bind = $mod ALT, L, exec, hyprlock
+bindl = $mod ALT, S, exec, pkill orca || exec orca
+
+# Média / luminosité (fonctionnent écran verrouillé)
+bindel = , XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+ -l 1.0
+bindel = , XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-
+bindl  = , XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+bindl  = , XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
+bindl  = , XF86AudioPlay, exec, playerctl play-pause
+bindl  = , XF86AudioStop, exec, playerctl stop
+bindl  = , XF86AudioPrev, exec, playerctl previous
+bindl  = , XF86AudioNext, exec, playerctl next
+bindel = , XF86MonBrightnessUp, exec, brightnessctl --class=backlight set +10%
+bindel = , XF86MonBrightnessDown, exec, brightnessctl --class=backlight set 10%-
+
+# Fenêtres
+bind = $mod, C, killactive
+# bind = $mod, O, overview:toggle   # nécessite le plugin hyprexpo
+
+# Focus (niri : gauche/droite = colonnes, haut/bas = fenêtres de la colonne)
+bind = $mod, Left,  movefocus, l
+bind = $mod, Down,  movefocus, d
+bind = $mod, Up,    movefocus, u
+bind = $mod, Right, movefocus, r
+bind = $mod, H, movefocus, l
+bind = $mod, J, movefocus, d
+bind = $mod, K, movefocus, u
+bind = $mod, L, movefocus, r
+
+# Déplacer (Shift+Bas/Haut : dans la colonne sinon vers le workspace suivant)
+bind = $mod SHIFT, Left,  movewindow, l
+bind = $mod SHIFT, Down,  exec, $helper move-or-ws down
+bind = $mod SHIFT, Up,    exec, $helper move-or-ws up
+bind = $mod SHIFT, Right, movewindow, r
+bind = $mod SHIFT, H, movewindow, l
+bind = $mod SHIFT, J, exec, $helper move-or-ws down
+bind = $mod SHIFT, K, exec, $helper move-or-ws up
+bind = $mod SHIFT, L, movewindow, r
+
+# Première / dernière colonne
+bind = $mod, Home, exec, $helper focus first
+bind = $mod, End,  exec, $helper focus last
+bind = $mod CTRL, Home, exec, $helper move first
+bind = $mod CTRL, End,  exec, $helper move last
+
+# Moniteurs
+bind = $mod CTRL, Left,  focusmonitor, l
+bind = $mod CTRL, Down,  focusmonitor, d
+bind = $mod CTRL, Up,    focusmonitor, u
+bind = $mod CTRL, Right, focusmonitor, r
+bind = $mod CTRL, H, focusmonitor, l
+bind = $mod CTRL, J, focusmonitor, d
+bind = $mod CTRL, K, focusmonitor, u
+bind = $mod CTRL, L, focusmonitor, r
+bind = $mod SHIFT CTRL, Left,  movewindow, mon:l
+bind = $mod SHIFT CTRL, Down,  movewindow, mon:d
+bind = $mod SHIFT CTRL, Up,    movewindow, mon:u
+bind = $mod SHIFT CTRL, Right, movewindow, mon:r
+bind = $mod SHIFT CTRL, H, movewindow, mon:l
+bind = $mod SHIFT CTRL, J, movewindow, mon:d
+bind = $mod SHIFT CTRL, K, movewindow, mon:u
+bind = $mod SHIFT CTRL, L, movewindow, mon:r
+
+# Workspaces relatifs (r± = sur le moniteur courant, crée un workspace vide au bout comme niri)
+bind = $mod, Page_Down, workspace, r+1
+bind = $mod, Page_Up,   workspace, r-1
+bind = $mod, U, workspace, r+1
+bind = $mod, I, workspace, r-1
+bind = $mod CTRL, Page_Down, movetoworkspace, r+1
+bind = $mod CTRL, Page_Up,   movetoworkspace, r-1
+bind = $mod CTRL, U, movetoworkspace, r+1
+bind = $mod CTRL, I, movetoworkspace, r-1
+# niri move-workspace-down/up (réordonner les workspaces) : pas d'équivalent Hyprland.
+
+# Molette : pas de changement de workspace. Seulement le focus colonne.
+bind = $mod SHIFT, mouse_down, movefocus, r
+bind = $mod SHIFT, mouse_up,   movefocus, l
+bind = $mod CTRL SHIFT, mouse_down, movewindow, r
+bind = $mod CTRL SHIFT, mouse_up,   movewindow, l
+
+# Workspaces numérotés (clavier fr)
+bind = $mod, ampersand,  workspace, 1
+bind = $mod, eacute,     workspace, 2
+bind = $mod, quotedbl,   workspace, 3
+bind = $mod, apostrophe, workspace, 4
+bind = $mod, parenleft,  workspace, 5
+bind = $mod, minus,      workspace, 6
+bind = $mod, egrave,     workspace, 7
+bind = $mod, underscore, workspace, 8
+bind = $mod, ccedilla,   workspace, 9
+bind = $mod, G, workspace, 10
+bind = $mod, S, workspace, 11
+bind = $mod SHIFT, ampersand,  movetoworkspace, 1
+bind = $mod SHIFT, eacute,     movetoworkspace, 2
+bind = $mod SHIFT, quotedbl,   movetoworkspace, 3
+bind = $mod SHIFT, apostrophe, movetoworkspace, 4
+bind = $mod SHIFT, parenleft,  movetoworkspace, 5
+bind = $mod SHIFT, minus,      movetoworkspace, 6
+bind = $mod SHIFT, egrave,     movetoworkspace, 7
+bind = $mod SHIFT, underscore, movetoworkspace, 8
+bind = $mod SHIFT, ccedilla,   movetoworkspace, 9
+bind = $mod SHIFT, G, movetoworkspace, 10
+
+# Colonnes niri ≈ groupes Hyprland (onglets)
+bind = $mod, bracketleft,  movewindoworgroup, l
+bind = $mod, bracketright, movewindoworgroup, r
+bind = $mod, comma,  moveintogroup, l
+bind = $mod, period, moveoutofgroup
+bind = $mod, W, togglegroup
+
+# Tailles
+bind = $mod, R, exec, $helper preset width
+bind = $mod CTRL SHIFT, R, exec, $helper preset height
+bind = $mod CTRL, R, exec, $helper preset height reset
+bind = $mod, F, fullscreen, 1
+bind = $mod SHIFT, F, fullscreen, 0
+bind = $mod, M, fullscreen, 1
+bind = $mod CTRL, F, fullscreen, 1
+bind = $mod CTRL, C, centerwindow
+bind = $mod, parenright, resizeactive, -10% 0
+bind = $mod, equal,      resizeactive, 10% 0
+bind = $mod SHIFT, parenright, resizeactive, 0 -10%
+bind = $mod SHIFT, equal,      resizeactive, 0 10%
+
+# Flottant
+bind = $mod, V, togglefloating
+bind = $mod SHIFT, V, exec, $helper swap-floating-focus
+
+# Captures
+bind = , Print, exec, ~/.local/bin/hypr-screenshot --live --save
+bind = CTRL, Print, exec, ~/.local/bin/hypr-screenshot screen-to-disk
+bind = ALT, Print, exec, ~/.local/bin/hypr-screenshot window-to-disk
+bind = $mod SHIFT, S, exec, ~/.local/bin/hypr-screenshot
+bind = $mod SHIFT, R, exec, ~/.local/bin/niri-record
+
+# Passthrough (≈ toggle-keyboard-shortcuts-inhibit) : Mod+Escape pour entrer/sortir
+bind = $mod, Escape, submap, passthrough
+submap = passthrough
+bind = $mod, Escape, submap, reset
+submap = reset
+
+# Session
+bind = $mod SHIFT, E, exit
+bind = CTRL ALT, Delete, exit
+bind = $mod SHIFT, P, dpms, off
+
+# Souris
+bindm = $mod, mouse:272, movewindow
+bindm = $mod, mouse:273, resizewindow
