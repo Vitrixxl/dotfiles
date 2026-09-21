@@ -1,11 +1,10 @@
 # dotfiles
 
-Configs Neovim et Hyprland. Les fichiers vivent ici, `~/.config` pointe dessus par symlink.
+Mes configs : Hyprland, Neovim, foot, fuzzel, fish, mako, btop, GTK, Thunar, pipewire. Les fichiers vivent ici, `~/.config` pointe dessus par symlink.
 
 ## Installation
 
 ```sh
 git clone https://github.com/Vitrixxl/dotfiles.git ~/dotfiles
-ln -s ~/dotfiles/config/nvim ~/.config/nvim
-ln -s ~/dotfiles/config/hypr ~/.config/hypr
+for d in ~/dotfiles/config/*; do ln -s "$d" ~/.config/(basename "$d"); end  # fish
 ```

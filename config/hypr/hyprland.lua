@@ -135,6 +135,7 @@ hl.bind(key(mod, "D"),      run(menu))
 hl.bind(key(mod, "Space"),  run(menu))
 hl.bind(key(mod, "E"),      run("thunar"))
 hl.bind("SUPER + ALT + L",  run("hyprlock"))
+hl.bind(key(shift, "L"),    run("hyprlock"))
 hl.bind("SUPER + ALT + S",  run("pkill orca || exec orca"), { locked = true })
 
 -- Média / luminosité (fonctionnent écran verrouillé)
@@ -159,6 +160,7 @@ directions(function(k, dir) hl.bind(key(mod, k), hl.dsp.focus({ direction = dir 
 
 -- Déplacer (Shift+Bas/Haut : dans la colonne sinon vers le workspace suivant)
 directions(function(k, dir)
+    if k == "L" then return end -- Mod+Shift+L est réservé au verrouillage.
     if dir == "d" then
         hl.bind(key(shift, k), run(helper .. " move-or-ws down"))
     elseif dir == "u" then
