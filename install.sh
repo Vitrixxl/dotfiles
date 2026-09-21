@@ -5,7 +5,7 @@
 #   ./install.sh              tout faire
 #   ./install.sh --no-deps    ne pas installer de paquets
 #   ./install.sh --no-links   ne pas toucher aux symlinks
-#   ./install.sh --no-build   ne pas compiler hypr-screenshot
+#   ./install.sh --no-build   ne pas compiler hypr-screenshot ni wifi-gui
 set -euo pipefail
 
 DOTFILES="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
@@ -44,8 +44,10 @@ PACKAGES=(
     # Neovim : plugins (git), treesitter (tree-sitter-cli + gcc), LSP
     neovim git gcc tree-sitter-cli ripgrep fd
     go gopls "bun|bun-bin" "lua-language-server|lua-language-server-git"
-    # Compilation de hypr-screenshot
+    # Compilation de hypr-screenshot et wifi-gui
     rust
+    # wifi-gui : nmcli, rendu gpui (Vulkan, ici iGPU Intel), lib requise à l'édition de liens
+    networkmanager vulkan-intel libxkbcommon-x11
     # Curseur, icônes, polices (le thème Arc n'est pas installé : GTK retombe sur Adwaita sombre)
     breeze-cursors adwaita-icon-theme adwaita-fonts
     otf-geist otf-geist-mono
@@ -157,9 +159,24 @@ build_screenshot() {
     install -m755 "$dir/native/target/release/hypr-screenshot-native" "$dir/hypr-screenshot-native"
 }
 
+# ── wifi-gui (Rust, gpui) ────────────────────────────────────────────────────
+build_wifi_gui() {
+    local dir="$DOTFILES/wifi-gui" bin="$HOME/.local/bin/wifi-gui" cargo
+    cargo="$(command -v cargo || true)"
+    [ -z "$cargo" ] && [ -x "$HOME/.cargo/bin/cargo" ] && cargo="$HOME/.cargo/bin/cargo"
+    if [ -x "$bin" ] && [ "$bin" -nt "$dir/src/main.rs" ] && [ "$bin" -nt "$dir/src/nm.rs" ]; then
+        info "wifi-gui est à jour."
+        return
+    fi
+    [ -z "$cargo" ] && { warn "cargo introuvable : wifi-gui non compilé."; return; }
+    info "Compilation de wifi-gui (la première fois, gpui prend quelques minutes)"
+    (cd "$dir" && "$cargo" build --release --locked)
+    install -Dm755 "$dir/target/release/wifi-gui" "$bin"
+}
+
 [ "$do_deps"  = 1 ] && { install_deps; setup_audio; }
 [ "$do_links" = 1 ] && install_links
-[ "$do_build" = 1 ] && build_screenshot
+[ "$do_build" = 1 ] && { build_screenshot; build_wifi_gui; }
 
 # ── Rappels ──────────────────────────────────────────────────────────────────
 echo

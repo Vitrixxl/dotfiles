@@ -3,3 +3,6 @@ hypr-screenshot/native/target/
 hypr-screenshot/hypr-screenshot-native
 hypr-screenshot/backups/
 hypr-screenshot/__pycache__/
+
+# wifi-gui : seuls les sources sont versionnés
+wifi-gui/target/

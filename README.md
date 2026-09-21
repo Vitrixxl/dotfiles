@@ -11,7 +11,7 @@ git clone https://github.com/Vitrixxl/dotfiles.git ~/dotfiles
 ```
 
 Le script cible Arch Linux et fonctionne aussi sur Artix. Il installe `yay`, puis toutes les dépendances avec `yay`.
-Il pose ensuite les symlinks et compile `hypr-screenshot`. Un fichier déjà présent est
+Il pose ensuite les symlinks et compile `hypr-screenshot` et `wifi-gui`. Un fichier déjà présent est
 déplacé dans `~/.dotfiles-backup/`, jamais écrasé. Le script peut être relancé sans risque.
 
 Sur un système avec systemd, la config `pipewire` du repo n'est pas liée : le script active les
@@ -24,5 +24,6 @@ Options : `--no-deps`, `--no-links`, `--no-build`.
 - `config/` : lié dans `~/.config/`
 - `bin/` : scripts utilisés par Hyprland, liés dans `~/.local/bin/`
 - `hypr-screenshot/` : sélecteur de capture en Rust, lié dans `~/.local/share/`
+- `wifi-gui/` : fenêtre Wi-Fi en Rust (gpui + `nmcli`), installée dans `~/.local/bin/`, ouverte par `Super+W`
 
 Le fond d'écran `~/Wallpapers/window-view-2560.mp4` n'est pas versionné.

@@ -1,0 +1,12 @@
+[package]
+name = "wifi-gui"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-only"
+
+[dependencies]
+gpui = { version = "0.2.2", default-features = false, features = ["wayland", "font-kit"] }
+
+[profile.release]
+lto = "thin"
+strip = true
