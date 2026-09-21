@@ -5,7 +5,7 @@
 #   ./install.sh              tout faire
 #   ./install.sh --no-deps    ne pas installer de paquets
 #   ./install.sh --no-links   ne pas toucher aux symlinks
-#   ./install.sh --no-build   ne pas compiler hypr-screenshot ni wifi-gui
+#   ./install.sh --no-build   ne pas compiler hypr-screenshot ni installer wifi-gui
 set -euo pipefail
 
 DOTFILES="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
@@ -30,6 +30,8 @@ warn() { printf '\033[1;33m!!\033[0m %s\n' "$*" >&2; }
 # Sur Arch, seuls mpvpaper et les polices Geist viennent de l'AUR.
 # "a|b" : a s'il existe dans les dépôts (Arch), sinon b depuis l'AUR (Artix).
 PACKAGES=(
+    # Gestionnaire de connexion
+    ly
     # Session Hyprland
     hyprland hyprlock hyprsunset hyprtoolkit
     xdg-desktop-portal xdg-desktop-portal-gtk
@@ -46,8 +48,8 @@ PACKAGES=(
     go gopls "bun|bun-bin" "lua-language-server|lua-language-server-git"
     # Compilation de hypr-screenshot et wifi-gui
     rust
-    # wifi-gui : nmcli, rendu gpui (Vulkan, ici iGPU Intel), lib requise à l'édition de liens
-    networkmanager vulkan-intel libxkbcommon-x11
+    # wifi-gui : pilote Vulkan pour gpui (ici iGPU Intel) ; le reste est déclaré dans son PKGBUILD
+    vulkan-intel
     # Curseur, icônes, polices (le thème Arc n'est pas installé : GTK retombe sur Adwaita sombre)
     breeze-cursors adwaita-icon-theme adwaita-fonts
     otf-geist otf-geist-mono
@@ -132,6 +134,31 @@ setup_audio() {
         || warn "Services pipewire non activés (pas de session utilisateur ?)."
 }
 
+# ── Gestionnaire de connexion ────────────────────────────────────────────────
+setup_ly() {
+    if ! has_systemd; then
+        warn "Ly : active le service avec le système d'init de ta distribution."
+        return 0
+    fi
+    if ! systemctl cat ly@tty2.service >/dev/null 2>&1; then
+        warn "Service ly@tty2.service introuvable : Ly non activé."
+        return 0
+    fi
+
+    local current_dm
+    current_dm="$(readlink -f /etc/systemd/system/display-manager.service 2>/dev/null || true)"
+    info "Activation de Ly sur tty2 au prochain démarrage"
+    # Sans --now : la session en cours reste ouverte.
+    sudo systemctl enable ly@tty2.service \
+        || { warn "Ly non activé."; return 0; }
+    if [ -f "$current_dm" ] && [ "${current_dm##*/}" != 'ly@.service' ]; then
+        sudo systemctl disable "${current_dm##*/}" \
+            || warn "Ancien gestionnaire de connexion non désactivé : ${current_dm##*/}."
+    fi
+    sudo systemctl disable getty@tty2.service \
+        || warn "getty@tty2.service non désactivé."
+}
+
 # ── Symlinks ─────────────────────────────────────────────────────────────────
 link() {                                  # link <source dans le repo> <cible>
     local src="$1" dst="$2"
@@ -178,24 +205,34 @@ build_screenshot() {
     install -m755 "$dir/native/target/release/hypr-screenshot-native" "$dir/hypr-screenshot-native"
 }
 
-# ── wifi-gui (Rust, gpui) ────────────────────────────────────────────────────
-build_wifi_gui() {
-    local dir="$DOTFILES/wifi-gui" bin="$HOME/.local/bin/wifi-gui" cargo
-    cargo="$(command -v cargo || true)"
-    [ -z "$cargo" ] && [ -x "$HOME/.cargo/bin/cargo" ] && cargo="$HOME/.cargo/bin/cargo"
-    if [ -x "$bin" ] && [ "$bin" -nt "$dir/src/main.rs" ] && [ "$bin" -nt "$dir/src/nm.rs" ]; then
+# ── wifi-gui (dépôt séparé, installé comme paquet pacman) ────────────────────
+WIFI_GUI_REPO="https://github.com/Vitrixxl/wifi-gui.git"
+install_wifi_gui() {
+    local dir="$HOME/.local/src/wifi-gui" before="" after
+    command -v makepkg >/dev/null || { warn "makepkg introuvable : wifi-gui non installé."; return; }
+    if [ -d "$dir/.git" ]; then
+        before="$(git -C "$dir" rev-parse HEAD)"
+        git -C "$dir" pull --ff-only --quiet || warn "wifi-gui : mise à jour impossible, version locale conservée."
+    else
+        info "Récupération de wifi-gui"
+        mkdir -p "$(dirname "$dir")"
+        git clone --depth 1 "$WIFI_GUI_REPO" "$dir" || { warn "wifi-gui : clone impossible."; return; }
+    fi
+    after="$(git -C "$dir" rev-parse HEAD)"
+    if [ "$before" = "$after" ] && pacman -Qq wifi-gui-git >/dev/null 2>&1; then
         info "wifi-gui est à jour."
         return
     fi
-    [ -z "$cargo" ] && { warn "cargo introuvable : wifi-gui non compilé."; return; }
     info "Compilation de wifi-gui (la première fois, gpui prend quelques minutes)"
-    (cd "$dir" && "$cargo" build --release --locked)
-    install -Dm755 "$dir/target/release/wifi-gui" "$bin"
+    (cd "$dir/arch" && makepkg -sif --noconfirm)
+    # Une ancienne installation manuelle masquerait /usr/bin dans le PATH.
+    rm -f "$HOME/.local/bin/wifi-gui" "$HOME/.local/bin/wifi-guid"
+    wifi-gui quit 2>/dev/null || true                  # le daemon repartira sur la nouvelle version
 }
 
-[ "$do_deps"  = 1 ] && { install_deps; setup_audio; }
+[ "$do_deps"  = 1 ] && { install_deps; setup_audio; setup_ly; }
 [ "$do_links" = 1 ] && install_links
-[ "$do_build" = 1 ] && { build_screenshot; build_wifi_gui; }
+[ "$do_build" = 1 ] && { build_screenshot; install_wifi_gui; }
 
 # ── Rappels ──────────────────────────────────────────────────────────────────
 echo

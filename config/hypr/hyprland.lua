@@ -63,6 +63,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("waybar")
     hl.exec_cmd(('mpvpaper -p -a MAX -o "%s" "*" "$HOME/Wallpapers/window-view-2560.mp4"'):format(mpv_opts))
     hl.exec_cmd("hyprsunset")
+    hl.exec_cmd("wifi-guid") -- daemon de wifi-gui : liste des réseaux prête avant l'ouverture
 end)
 
 -- ── Entrées ──────────────────────────────────────────────────────────────────
@@ -124,11 +125,11 @@ hl.window_rule({
 })
 -- wifi-gui : petit rectangle flottant au centre de l'écran
 hl.window_rule({
-    name   = "wifi-gui-float",
-    match  = { class = "^(wifi-gui)$" },
-    float  = true,
-    size   = "420 560",
-    move   = "monitor_w/2-210 monitor_h/2-280",
+    name  = "wifi-gui-float",
+    match = { class = "^(wifi-gui)$" },
+    float = true,
+    size  = "420 560",
+    move  = "monitor_w/2-210 monitor_h/2-280",
 })
 -- Spotify (web-app Brave) toujours sur le workspace S (11)
 hl.window_rule({
@@ -143,7 +144,7 @@ hl.bind(key(mod, "Return"), run(term))
 hl.bind(key(mod, "D"), run(menu))
 hl.bind(key(mod, "Space"), run(menu))
 hl.bind(key(mod, "E"), run("thunar"))
-hl.bind(key(mod, "W"), run("pkill -x wifi-gui || ~/.local/bin/wifi-gui")) -- bascule, comme le launcher
+hl.bind(key(mod, "W"), run("wifi-gui")) -- bascule : le daemon referme la fenêtre si elle est ouverte
 hl.bind("SUPER + ALT + L", run("hyprlock"))
 hl.bind(key(shift, "L"), run("hyprlock"))
 hl.bind("SUPER + ALT + S", run("pkill orca || exec orca"), { locked = true })
