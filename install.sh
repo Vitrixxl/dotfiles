@@ -27,7 +27,7 @@ warn() { printf '\033[1;33m!!\033[0m %s\n' "$*" >&2; }
 
 # ── Paquets ──────────────────────────────────────────────────────────────────
 # yay est installé en premier, puis il installe tout (dépôts et AUR).
-# Sur Arch, seuls mpvpaper, arc-gtk-theme et les polices Geist viennent de l'AUR.
+# Sur Arch, seuls mpvpaper et les polices Geist viennent de l'AUR.
 # "a|b" : a s'il existe dans les dépôts (Arch), sinon b depuis l'AUR (Artix).
 PACKAGES=(
     # Session Hyprland
@@ -46,8 +46,8 @@ PACKAGES=(
     go gopls "bun|bun-bin" "lua-language-server|lua-language-server-git"
     # Compilation de hypr-screenshot
     rust
-    # Thème GTK, curseur, polices
-    arc-gtk-theme breeze-cursors adwaita-icon-theme adwaita-fonts
+    # Curseur, icônes, polices (le thème Arc n'est pas installé : GTK retombe sur Adwaita sombre)
+    breeze-cursors adwaita-icon-theme adwaita-fonts
     otf-geist otf-geist-mono
 )
 
