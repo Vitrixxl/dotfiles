@@ -113,6 +113,13 @@ hl.animation({ leaf = "border", enabled = false })
 hl.animation({ leaf = "layers", enabled = true, speed = 1.5, bezier = "quick", style = "fade" })
 
 -- ── Règles de fenêtres ───────────────────────────────────────────────────────
+-- Les fenêtres tuilées restent carrées (rounding = 0 ci-dessus) ; les flottantes
+-- prennent des coins arrondis.
+hl.window_rule({
+    name     = "floating-rounding",
+    match    = { float = true },
+    rounding = 18,
+})
 hl.window_rule({
     name  = "firefox-pip",
     match = { class = "^(firefox)$", title = "^(Picture-in-Picture)$" },
