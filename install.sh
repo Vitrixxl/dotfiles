@@ -27,14 +27,18 @@ warn() { printf '\033[1;33m!!\033[0m %s\n' "$*" >&2; }
 
 # ── Paquets ──────────────────────────────────────────────────────────────────
 # yay est installé en premier, puis il installe tout (dépôts et AUR).
-# Sur Arch, seuls mpvpaper et les polices Geist viennent de l'AUR.
+# Sur Arch, Brave, mpvpaper et les polices Geist viennent de l'AUR.
 # "a|b" : a s'il existe dans les dépôts (Arch), sinon b depuis l'AUR (Artix).
 PACKAGES=(
     # Gestionnaire de connexion
     ly
     # Session Hyprland
     hyprland hyprlock hyprsunset hyprtoolkit
-    xdg-desktop-portal xdg-desktop-portal-gtk
+    # Portails : partage d'écran sous Hyprland et sélecteur de fichiers GTK
+    xdg-desktop-portal xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
+    # Brave : rendu WebGL sur la RTX 3050 Ti, via PRIME et XWayland.
+    # nvidia-open correspond au noyau linux standard de cette machine.
+    brave-bin nvidia-open nvidia-utils nvidia-prime xorg-xwayland desktop-file-utils
     # Terminal, shell, launcher, notifications, fichiers
     foot fish fuzzel mako libnotify thunar btop fastfetch
     # Audio, touches média, luminosité
@@ -46,6 +50,8 @@ PACKAGES=(
     # Neovim : plugins (git), treesitter (tree-sitter-cli + gcc), LSP (ceux de Vue passent par bun)
     neovim git gcc tree-sitter-cli ripgrep fd
     go gopls "bun|bun-bin" "lua-language-server|lua-language-server-git"
+    # Conteneurs : moteur Docker, Compose et Buildx
+    docker docker-compose docker-buildx
     # Compilation de hypr-screenshot et wifi-gui
     rust
     # wifi-gui : pilote Vulkan pour gpui (ici iGPU Intel) ; le reste est déclaré dans son PKGBUILD
@@ -159,6 +165,33 @@ setup_ly() {
         || warn "getty@tty2.service non désactivé."
 }
 
+# ── Docker ───────────────────────────────────────────────────────────────────
+setup_docker() {
+    command -v dockerd >/dev/null || { warn "Docker non installé : configuration ignorée."; return 0; }
+
+    local docker_user="${SUDO_USER:-${USER:-$(id -un)}}"
+    if ! getent group docker >/dev/null; then
+        sudo groupadd --system docker \
+            || { warn "Impossible de créer le groupe docker."; return 0; }
+    fi
+    if [ "$docker_user" != root ] && ! id -nG "$docker_user" | tr ' ' '\n' | grep -qx docker; then
+        info "Ajout de $docker_user au groupe docker"
+        if sudo usermod -aG docker "$docker_user"; then
+            info "Docker sans sudo : déconnecte-toi puis reconnecte-toi pour appliquer le groupe."
+        else
+            warn "Impossible d'ajouter $docker_user au groupe docker."
+        fi
+    fi
+
+    if has_systemd; then
+        info "Activation et démarrage de Docker"
+        sudo systemctl enable --now containerd.service docker.service \
+            || warn "Services Docker non activés ou non démarrés."
+    else
+        warn "Docker : active le service avec le système d'init de ta distribution."
+    fi
+}
+
 # ── Symlinks ─────────────────────────────────────────────────────────────────
 link() {                                  # link <source dans le repo> <cible>
     local src="$1" dst="$2"
@@ -187,6 +220,13 @@ install_links() {
         link "$d" "$HOME/.local/bin/$(basename "$d")"
     done
     link "$DOTFILES/hypr-screenshot" "$HOME/.local/share/hypr-screenshot"
+    for d in "$DOTFILES"/applications/*.desktop; do
+        link "$d" "$HOME/.local/share/applications/$(basename "$d")"
+    done
+    if command -v update-desktop-database >/dev/null; then
+        update-desktop-database "$HOME/.local/share/applications" \
+            || warn "Cache des lanceurs non actualisé."
+    fi
 }
 
 # ── hypr-screenshot (Rust) ───────────────────────────────────────────────────
@@ -230,9 +270,13 @@ install_wifi_gui() {
     wifi-gui quit 2>/dev/null || true                  # le daemon repartira sur la nouvelle version
 }
 
-[ "$do_deps"  = 1 ] && { install_deps; setup_audio; setup_ly; }
+[ "$do_deps"  = 1 ] && { install_deps; setup_audio; setup_ly; setup_docker; }
 [ "$do_links" = 1 ] && install_links
 [ "$do_build" = 1 ] && { build_screenshot; install_wifi_gui; }
+
+if [ "$do_deps" = 1 ]; then
+    info "NVIDIA : après la première installation du pilote, redémarre puis vérifie nvidia-smi."
+fi
 
 # ── Rappels ──────────────────────────────────────────────────────────────────
 echo
