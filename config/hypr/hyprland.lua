@@ -136,6 +136,20 @@ hl.window_rule({
     size  = "420 560",
     move  = "monitor_w/2-210 monitor_h/2-280",
 })
+-- Centre de contrôle Nexus : fenêtre flottante détachée de la barre.
+hl.window_rule({
+    name  = "nexus-control-float",
+    match = { class = "^(nexus)$", title = "^(Nexus)$" },
+    float = true,
+    size  = "900 640",
+    move  = "monitor_w/2-450 monitor_h/2-320",
+})
+-- Le launcher Nexus anime lui-même son panneau ; un fondu en plus le ferait saccader.
+hl.layer_rule({
+    name    = "nexus-panel-no-anim",
+    match   = { namespace = "^nexus-panel$" },
+    no_anim = true,
+})
 -- Spotify (web-app Brave) toujours sur le workspace S (11)
 hl.window_rule({
     name      = "spotify-ws",
@@ -149,6 +163,7 @@ hl.bind(key(mod, "Return"), run(term))
 hl.bind(key(mod, "D"), run(menu))
 hl.bind(key(mod, "Space"), run(menu))
 hl.bind(key(mod, "E"), run("thunar"))
+hl.bind(key(mod, "N"), run("nexus control")) -- centre de contrôle Nexus (dernière page)
 hl.bind(key(mod, "W"), run("nexus wifi")) -- ouvre directement la page Wi-Fi
 hl.bind("SUPER + ALT + N", run("nexus"))
 hl.bind("SUPER + ALT + B", run("nexus bluetooth"))
