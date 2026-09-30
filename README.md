@@ -1,7 +1,7 @@
 # dotfiles
 
-Mes configs : Hyprland, Neovim, foot, fuzzel, fish, mako, btop, GTK, Thunar, pipewire.
-Les fichiers vivent ici, `~/.config` pointe dessus par symlink.
+Mes configs : Hyprland, Nexus, Neovim, foot, fish, mako, btop, GTK, Thunar, pipewire.
+Les fichiers vivent ici, `~/.config` pointe dessus par symlink, sauf Hyprland : ses fichiers locaux restent indépendants et sont conservés à l’installation.
 
 ## Installation
 
@@ -11,8 +11,8 @@ git clone https://github.com/Vitrixxl/dotfiles.git ~/dotfiles
 ```
 
 Le script cible Arch Linux et fonctionne aussi sur Artix. Il installe `yay`, puis toutes les dépendances avec `yay`.
-Il pose ensuite les symlinks, compile `hypr-screenshot` et installe [wifi-gui](https://github.com/Vitrixxl/wifi-gui)
-(fenêtre Wi-Fi, `Super+W`) depuis son dépôt, comme paquet pacman. Un fichier déjà présent est
+Il pose ensuite les symlinks, compile `hypr-screenshot` et installe [Nexus](https://github.com/Vitrixxl/nexus)
+(centre de contrôle Rust/GTK et daemon) depuis son dépôt dans `~/.local/bin`. Un fichier déjà présent est
 déplacé dans `~/.dotfiles-backup/`, jamais écrasé. Le script peut être relancé sans risque.
 
 Sur un système avec systemd, la config `pipewire` du repo n'est pas liée : le script active les
@@ -37,6 +37,33 @@ Déconnecte-toi puis reconnecte-toi après l'installation pour utiliser Docker s
 Sur Artix, le service Docker doit être activé avec le système d'init utilisé.
 
 Options : `--no-deps`, `--no-links`, `--no-build`.
+
+## Nexus : barre, launcher et réglages
+
+La barre intégrée à Nexus affiche les espaces de travail, l’heure, le Wi-Fi, le Bluetooth, le volume,
+la luminosité, la batterie et le bouton d’alimentation. Les boutons ouvrent la
+page correspondante de Nexus. L’interface de Nexus est en anglais.
+
+- `Super+Space` ou `Super+D` : launcher intégré ; ↑/↓ ou Ctrl+N/P, Entrée pour ouvrir, Échap pour fermer.
+- `Super+W` : Wi-Fi ; `Super+Alt+N` : Nexus.
+- `Super+Alt+B` : Bluetooth ; `Super+Alt+A` : son.
+- `Super+Alt+P` ou `Ctrl+Alt+Delete` : écran Sleep / Restart / Shutdown.
+- Appearance : thème clair/sombre, choix du wallpaper et couleurs générées en option.
+
+`nexus-session` démarre le daemon et le shell Nexus depuis Hyprland, avec ou sans systemd.
+Nexus utilise volontairement ConnMan ; le script ne remplace ni n’active le
+gestionnaire réseau existant (NetworkManager reste inchangé).
+Les wallpapers sélectionnés utilisent `swaybg` et remplacent le fond vidéo.
+Les paramètres et les couleurs générées restent dans `~/.config/nexus`.
+
+Pour autoriser l’alimentation sans sudo si elogind/logind la refuse :
+
+```sh
+sudo install -Dm644 ~/.local/share/nexus/49-nexus-power.rules /etc/polkit-1/rules.d/49-nexus-power.rules
+```
+
+Cette règle est limitée aux sessions locales actives. `loginctl poweroff` permet
+ensuite d’éteindre depuis un terminal. Les boutons Nexus passent par la même API.
 
 ## Brave et rendu 3D NVIDIA
 

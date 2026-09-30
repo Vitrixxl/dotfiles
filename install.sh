@@ -5,7 +5,7 @@
 #   ./install.sh              tout faire
 #   ./install.sh --no-deps    ne pas installer de paquets
 #   ./install.sh --no-links   ne pas toucher aux symlinks
-#   ./install.sh --no-build   ne pas compiler hypr-screenshot ni installer wifi-gui
+#   ./install.sh --no-build   ne pas compiler hypr-screenshot ni installer Nexus
 set -euo pipefail
 
 DOTFILES="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
@@ -52,9 +52,11 @@ PACKAGES=(
     go gopls "bun|bun-bin" "lua-language-server|lua-language-server-git"
     # Conteneurs : moteur Docker, Compose et Buildx
     docker docker-compose docker-buildx
-    # Compilation de hypr-screenshot et wifi-gui
-    rust
-    # wifi-gui : pilote Vulkan pour gpui (ici iGPU Intel) ; le reste est déclaré dans son PKGBUILD
+    # Compilation de hypr-screenshot et Nexus
+    rust pkgconf gtk4
+    # Nexus : ConnMan reste son backend, sans modifier le gestionnaire réseau de la distribution
+    gtk4-layer-shell swaybg bluez bluez-utils libpulse polkit
+    # Pilote Vulkan de l’iGPU
     vulkan-intel
     # Curseur, icônes, polices (le thème Arc n'est pas installé : GTK retombe sur Adwaita sombre)
     breeze-cursors adwaita-icon-theme adwaita-fonts
@@ -214,6 +216,29 @@ install_links() {
         if [ "$(basename "$d")" = pipewire ] && has_systemd; then
             continue                                   # config réservée aux systèmes sans systemd
         fi
+        # La configuration Hyprland locale et celle du dépôt restent indépendantes.
+        if [ "$(basename "$d")" = hypr ]; then
+            if [ -L "$HOME/.config/hypr" ]; then
+                mkdir -p "$BACKUP"
+                cp -aL "$HOME/.config/hypr" "$BACKUP/hypr-copy"
+                rm "$HOME/.config/hypr"
+                cp -a "$BACKUP/hypr-copy" "$HOME/.config/hypr"
+            fi
+            mkdir -p "$HOME/.config/hypr"
+            local source target
+            for source in "$d"/*; do
+                target="$HOME/.config/hypr/$(basename "$source")"
+                if [ -L "$target" ]; then
+                    cp -L "$target" "$target.nexus-copy"
+                    rm "$target"
+                    mv "$target.nexus-copy" "$target"
+                elif [ ! -e "$target" ]; then
+                    cp -a "$source" "$target"
+                fi
+            done
+            info "Hyprland : fichiers locaux conservés, aucun lien vers le dépôt."
+            continue
+        fi
         link "$d" "$HOME/.config/$(basename "$d")"
     done
     for d in "$DOTFILES"/bin/*; do
@@ -245,34 +270,28 @@ build_screenshot() {
     install -m755 "$dir/native/target/release/hypr-screenshot-native" "$dir/hypr-screenshot-native"
 }
 
-# ── wifi-gui (dépôt séparé, installé comme paquet pacman) ────────────────────
-WIFI_GUI_REPO="https://github.com/Vitrixxl/wifi-gui.git"
-install_wifi_gui() {
-    local dir="$HOME/.local/src/wifi-gui" before="" after
-    command -v makepkg >/dev/null || { warn "makepkg introuvable : wifi-gui non installé."; return; }
+# ── Nexus (Rust + GTK, dépôt séparé) ─────────────────────────────────────────
+NEXUS_REPO="https://github.com/Vitrixxl/nexus.git"
+install_nexus() {
+    local dir="${NEXUS_SOURCE:-$HOME/.local/src/nexus}"
     if [ -d "$dir/.git" ]; then
-        before="$(git -C "$dir" rev-parse HEAD)"
-        git -C "$dir" pull --ff-only --quiet || warn "wifi-gui : mise à jour impossible, version locale conservée."
+        git -C "$dir" pull --ff-only --quiet || warn "Nexus : version locale conservée."
     else
-        info "Récupération de wifi-gui"
         mkdir -p "$(dirname "$dir")"
-        git clone --depth 1 "$WIFI_GUI_REPO" "$dir" || { warn "wifi-gui : clone impossible."; return; }
+        git clone --depth 1 "$NEXUS_REPO" "$dir"
     fi
-    after="$(git -C "$dir" rev-parse HEAD)"
-    if [ "$before" = "$after" ] && pacman -Qq wifi-gui-git >/dev/null 2>&1; then
-        info "wifi-gui est à jour."
-        return
+    info "Compilation et installation de Nexus"
+    (cd "$dir" && ./install.sh)
+    # ConnMan est volontairement le seul backend de Nexus pour le moment.
+    # Ne pas remplacer/activer NetworkManager ou ConnMan ici.
+    if ! command -v connmanctl >/dev/null; then
+        warn "Nexus Wi-Fi nécessite ConnMan. Le gestionnaire réseau existant est conservé."
     fi
-    info "Compilation de wifi-gui (la première fois, gpui prend quelques minutes)"
-    (cd "$dir/arch" && makepkg -sif --noconfirm)
-    # Une ancienne installation manuelle masquerait /usr/bin dans le PATH.
-    rm -f "$HOME/.local/bin/wifi-gui" "$HOME/.local/bin/wifi-guid"
-    wifi-gui quit 2>/dev/null || true                  # le daemon repartira sur la nouvelle version
 }
 
 [ "$do_deps"  = 1 ] && { install_deps; setup_audio; setup_ly; setup_docker; }
 [ "$do_links" = 1 ] && install_links
-[ "$do_build" = 1 ] && { build_screenshot; install_wifi_gui; }
+[ "$do_build" = 1 ] && { build_screenshot; install_nexus; }
 
 if [ "$do_deps" = 1 ]; then
     info "NVIDIA : après la première installation du pilote, redémarre puis vérifie nvidia-smi."

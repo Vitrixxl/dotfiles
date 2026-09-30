@@ -8,7 +8,7 @@ local ctrl   = "SUPER + CTRL"
 local mctrl  = "SUPER + SHIFT + CTRL"
 
 local term   = "foot"
-local menu   = "pkill -x fuzzel || fuzzel" -- bascule : un second appui referme
+local menu   = "nexus launcher" -- launcher intégré au shell
 local helper = "~/.local/bin/hypr-helper"
 
 local function key(mods, k) return mods .. " + " .. k end
@@ -60,10 +60,9 @@ local mpv_opts = table.concat({
 hl.on("hyprland.start", function()
     -- Avec systemd (Arch), pipewire est un service utilisateur : on ne le lance que sans systemd (Artix).
     hl.exec_cmd("[ -d /run/systemd/system ] || pipewire")
-    hl.exec_cmd("waybar")
-    hl.exec_cmd(('mpvpaper -p -a MAX -o "%s" "*" "$HOME/Wallpapers/window-view-2560.mp4"'):format(mpv_opts))
+    hl.exec_cmd(('jq -e \".wallpaper != null\" \"$HOME/.config/nexus/settings.json\" >/dev/null 2>&1 || mpvpaper -p -a MAX -o "%s" "*" "$HOME/Wallpapers/window-view-2560.mp4"'):format(mpv_opts))
     hl.exec_cmd("hyprsunset")
-    hl.exec_cmd("wifi-guid") -- daemon de wifi-gui : liste des réseaux prête avant l'ouverture
+    hl.exec_cmd("~/.local/bin/nexus-session")
 end)
 
 -- ── Entrées ──────────────────────────────────────────────────────────────────
@@ -82,16 +81,16 @@ hl.config({
 -- Gestes touchpad : balayage horizontal à 3 doigts = changer de workspace
 hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
 
--- ── Apparence (niri : gaps 0, focus-ring off, border off, coins carrés) ──────
+-- ── Apparence : espacements légers et coins arrondis ───────────────────────
 hl.config({
     general    = {
-        gaps_in     = 0,
-        gaps_out    = 0,
+        gaps_in     = 5,
+        gaps_out    = 10,
         border_size = 0,
         layout      = "dwindle",
     },
     decoration = {
-        rounding = 0,
+        rounding = 12,
         shadow   = { enabled = false },
         blur     = { enabled = false },
     },
@@ -113,8 +112,7 @@ hl.animation({ leaf = "border", enabled = false })
 hl.animation({ leaf = "layers", enabled = true, speed = 1.5, bezier = "quick", style = "fade" })
 
 -- ── Règles de fenêtres ───────────────────────────────────────────────────────
--- Les fenêtres tuilées restent carrées (rounding = 0 ci-dessus) ; les flottantes
--- prennent des coins arrondis.
+-- Les fenêtres flottantes ont des coins légèrement plus arrondis.
 hl.window_rule({
     name     = "floating-rounding",
     match    = { float = true },
@@ -151,7 +149,11 @@ hl.bind(key(mod, "Return"), run(term))
 hl.bind(key(mod, "D"), run(menu))
 hl.bind(key(mod, "Space"), run(menu))
 hl.bind(key(mod, "E"), run("thunar"))
-hl.bind(key(mod, "W"), run("wifi-gui")) -- bascule : le daemon referme la fenêtre si elle est ouverte
+hl.bind(key(mod, "W"), run("nexus wifi")) -- ouvre directement la page Wi-Fi
+hl.bind("SUPER + ALT + N", run("nexus"))
+hl.bind("SUPER + ALT + B", run("nexus bluetooth"))
+hl.bind("SUPER + ALT + A", run("nexus sound"))
+hl.bind("SUPER + ALT + P", run("nexus power"))
 hl.bind("SUPER + ALT + L", run("hyprlock"))
 hl.bind(key(shift, "L"), run("hyprlock"))
 hl.bind("SUPER + ALT + S", run("pkill orca || exec orca"), { locked = true })
@@ -274,7 +276,7 @@ end)
 
 -- ── Session ──────────────────────────────────────────────────────────────────
 hl.bind(key(shift, "E"), hl.dsp.exit())
-hl.bind("CTRL + ALT + Delete", hl.dsp.exit())
+hl.bind("CTRL + ALT + Delete", run("nexus power"))
 -- dpms directement dans un bind = comportement indéfini (wiki) : passer par un timer.
 hl.bind(key(shift, "P"), function()
     hl.timer(function()
