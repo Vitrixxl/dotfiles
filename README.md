@@ -36,6 +36,13 @@ et y ajoute ton utilisateur. Avec systemd, il active et démarre Docker et conta
 Déconnecte-toi puis reconnecte-toi après l'installation pour utiliser Docker sans `sudo`.
 Sur Artix, le service Docker doit être activé avec le système d'init utilisé.
 
+Il installe aussi Claude Code, Codex CLI (`openai-codex-bin`) et T3 Code (`t3code-bin`) depuis l'AUR.
+Claude Code et Codex sont ignorés si `claude` ou `codex` sont déjà présents (installeur natif).
+
+Pour Steam, le script active le dépôt 32 bits dans `/etc/pacman.conf` s'il est commenté :
+`[lib32]` sur Artix, `[multilib]` sur Arch (sauvegarde dans `/etc/pacman.conf.bak`,
+puis `pacman -Syu`). Il installe ensuite `steam`, `lib32-nvidia-utils` et `lib32-vulkan-intel`.
+
 Options : `--no-deps`, `--no-links`, `--no-build`.
 
 ## Nexus : barre, launcher et réglages
@@ -55,6 +62,14 @@ Nexus utilise volontairement ConnMan ; le script ne remplace ni n’active le
 gestionnaire réseau existant (NetworkManager reste inchangé).
 Les wallpapers sélectionnés utilisent `swaybg` et remplacent le fond vidéo.
 Les paramètres et les couleurs générées restent dans `~/.config/nexus`.
+Nexus construit aussi les thèmes GTK `Nexus` / `Nexus-dark` sur adw-gtk3 avec ces couleurs
+(accent du wallpaper compris) et les sélectionne : les applis GTK3, Thunar compris, les suivent
+en direct ; Brave les utilise quand son thème est réglé sur GTK (Paramètres › Apparence).
+Les applis libadwaita les prennent à leur prochain lancement (bloc généré dans
+`~/.config/gtk-4.0/gtk.css`, ignoré par git).
+
+Curseur : Bibata Modern Classic (AUR `bibata-cursor-theme-bin`), appliqué à Hyprland,
+GTK et XWayland.
 
 Pour autoriser l’alimentation sans sudo si elogind/logind la refuse :
 

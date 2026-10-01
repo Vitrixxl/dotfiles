@@ -24,7 +24,7 @@ local function directions(fn)
 end
 
 -- ── Moniteurs ────────────────────────────────────────────────────────────────
-hl.monitor({ output = "eDP-1", mode = "2560x1600@240", position = "0x0", scale = 1 })
+hl.monitor({ output = "eDP-1", mode = "2560x1600@240", position = "0x0", scale = 1.25 })
 hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@144", position = "auto-right", scale = 1 })
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
 
@@ -35,6 +35,8 @@ hl.env("XDG_SESSION_DESKTOP", "Hyprland")
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 hl.env("QT_QPA_PLATFORM", "wayland;xcb")
 hl.env("QT_WAYLAND_DISABLE_WINDOWDECORATION", "1")
+hl.env("XCURSOR_THEME", "Bibata-Modern-Classic")
+hl.env("XCURSOR_SIZE", "24")
 
 hl.config({
     xwayland = {
@@ -139,7 +141,7 @@ hl.window_rule({
 -- Centre de contrôle Nexus : fenêtre flottante détachée de la barre.
 hl.window_rule({
     name  = "nexus-control-float",
-    match = { class = "^(nexus)$", title = "^(Nexus)$" },
+    match = { class = "^(io\\.github\\.vitrixxl\\.Nexus)$", title = "^(Nexus)$" },
     float = true,
     size  = "900 640",
     move  = "monitor_w/2-450 monitor_h/2-320",

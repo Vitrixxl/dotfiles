@@ -1,4 +1,5 @@
 function load_nvm --description 'Select Node from .nvmrc or the default alias' --on-variable PWD
+    test -f "$NVM_DIR/nvm.sh"; or return    # nvm absent sur cette machine
     set -l dir "$PWD"
     set -l requested default
     while true

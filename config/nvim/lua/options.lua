@@ -41,10 +41,3 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 		vim.hl.on_yank()
 	end,
 })
-
-vim.api.nvim_create_autocmd("BufWritePre", {
-	desc = "Highlight when yanking text",
-	callback = function()
-		vim.lsp.buf.format()
-	end,
-})

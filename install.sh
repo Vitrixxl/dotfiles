@@ -52,14 +52,19 @@ PACKAGES=(
     go gopls "bun|bun-bin" "lua-language-server|lua-language-server-git"
     # Conteneurs : moteur Docker, Compose et Buildx
     docker docker-compose docker-buildx
+    # Agents de code : Claude Code, Codex CLI et T3 Code (AUR)
+    claude-code openai-codex-bin t3code-bin
+    # Steam et pilotes Vulkan/OpenGL 32 bits (dépôt lib32 sur Artix, multilib sur Arch)
+    steam lib32-nvidia-utils lib32-vulkan-intel
     # Compilation de hypr-screenshot et Nexus
     rust pkgconf gtk4
     # Nexus : ConnMan reste son backend, sans modifier le gestionnaire réseau de la distribution
     gtk4-layer-shell swaybg bluez bluez-utils libpulse polkit
     # Pilote Vulkan de l’iGPU
     vulkan-intel
-    # Curseur, icônes, polices (le thème Arc n'est pas installé : GTK retombe sur Adwaita sombre)
-    breeze-cursors adwaita-icon-theme adwaita-fonts
+    # Curseur Bibata Modern Classic (AUR), thème GTK adw-gtk3 que Nexus recolore
+    # avec les couleurs du wallpaper (applis GTK et Brave en mode GTK), icônes, polices
+    bibata-cursor-theme-bin adw-gtk-theme adwaita-icon-theme adwaita-fonts
     otf-geist otf-geist-mono
 )
 
@@ -73,8 +78,24 @@ ensure_yay() {
     rm -rf "$tmp"
 }
 
+# Paquets 32 bits (Steam) : dépôt [lib32] sur Artix, [multilib] sur Arch,
+# commentés par défaut dans /etc/pacman.conf.
+enable_lib32() {
+    local conf=/etc/pacman.conf repo
+    grep -qE '^\[(lib32|multilib)\]' "$conf" && return 0     # déjà activé
+    if grep -qx '#\[lib32\]' "$conf"; then repo=lib32
+    elif grep -qx '#\[multilib\]' "$conf"; then repo=multilib
+    else warn "Dépôt 32 bits introuvable dans $conf : Steam ne pourra pas s'installer."; return 0
+    fi
+    info "Activation du dépôt [$repo] dans $conf"
+    sudo cp "$conf" "$conf.bak"
+    sudo sed -i "/^#\[$repo\]\$/,/^#Include/ s/^#//" "$conf"
+    sudo pacman -Syu || warn "Synchronisation des dépôts incomplète."
+}
+
 install_deps() {
     command -v pacman >/dev/null || { warn "pacman introuvable : installe les paquets à la main."; return; }
+    enable_lib32
     ensure_yay                                         # yay d'abord, tout le reste passe par lui
 
     local todo=() entry name fallback need_go_gopls=0
@@ -86,9 +107,17 @@ install_deps() {
             continue                                   # rustup déjà en place
         elif [ "$name" = bun ] && command -v bun >/dev/null; then
             continue
+        elif [ "$name" = claude-code ] && command -v claude >/dev/null; then
+            continue                                   # installeur natif déjà en place
+        elif [ "$name" = openai-codex-bin ] && command -v codex >/dev/null; then
+            continue
         elif [ "$name" = gopls ]; then                 # paquet sur Arch, go install sinon
             if command -v gopls >/dev/null || [ -x "$(go env GOPATH 2>/dev/null)/bin/gopls" ]; then continue; fi
             if pacman -Si gopls >/dev/null 2>&1; then todo+=(gopls); else need_go_gopls=1; fi
+        elif [ "$name" = bibata-cursor-theme-bin ] && [ -d "$HOME/.icons/$CURSOR_THEME" ]; then
+            continue                                   # curseur déjà installé à la main
+        elif [ "$name" = adw-gtk-theme ] && [ -d "$HOME/.local/share/themes/adw-gtk3" ]; then
+            continue                                   # thème déjà installé à la main
         elif [[ "$name" = otf-geist* ]] && fc-list : family 2>/dev/null | grep -i 'Geist' >/dev/null; then
             continue                                   # police déjà installée à la main
         elif [ "$name" = "$fallback" ] || pacman -Si "$name" >/dev/null 2>&1; then
@@ -194,6 +223,28 @@ setup_docker() {
     fi
 }
 
+# ── Curseur ──────────────────────────────────────────────────────────────────
+# Hyprland le reçoit par XCURSOR_THEME (config/hypr/hyprland.lua) et GTK par
+# settings.ini ; ce thème par défaut couvre XWayland et les autres applis.
+CURSOR_THEME=Bibata-Modern-Classic
+CURSOR_SIZE=24
+
+setup_cursor() {
+    local index="$HOME/.icons/default/index.theme"
+    if ! grep -qx "Inherits=$CURSOR_THEME" "$index" 2>/dev/null; then
+        info "Curseur par défaut : $CURSOR_THEME"
+        mkdir -p "$(dirname "$index")"
+        printf '[Icon Theme]\nName=Default\nComment=Default Cursor Theme\nInherits=%s\n' \
+            "$CURSOR_THEME" > "$index"
+    fi
+    # Applis qui lisent GSettings (libadwaita, portail) ; sans session, settings.ini suffit.
+    if command -v gsettings >/dev/null; then
+        gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME" 2>/dev/null \
+            && gsettings set org.gnome.desktop.interface cursor-size "$CURSOR_SIZE" 2>/dev/null \
+            || warn "Curseur non appliqué dans GSettings (pas de session ?)."
+    fi
+}
+
 # ── Symlinks ─────────────────────────────────────────────────────────────────
 link() {                                  # link <source dans le repo> <cible>
     local src="$1" dst="$2"
@@ -290,7 +341,7 @@ install_nexus() {
 }
 
 [ "$do_deps"  = 1 ] && { install_deps; setup_audio; setup_ly; setup_docker; }
-[ "$do_links" = 1 ] && install_links
+[ "$do_links" = 1 ] && { install_links; setup_cursor; }
 [ "$do_build" = 1 ] && { build_screenshot; install_nexus; }
 
 if [ "$do_deps" = 1 ]; then
