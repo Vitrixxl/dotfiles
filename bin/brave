@@ -1,0 +1,6 @@
+#!/bin/sh
+# Brave lancé depuis un agent (T3 Code, Claude…) hérite de
+# DBUS_SESSION_BUS_ADDRESS=disabled: et ne voit plus les changements de thème
+# (GTK, clair/sombre). Sans cette valeur, GLib retrouve le bus de session.
+[ "$DBUS_SESSION_BUS_ADDRESS" = "disabled:" ] && unset DBUS_SESSION_BUS_ADDRESS
+exec /usr/bin/brave "$@"

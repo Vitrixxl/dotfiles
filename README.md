@@ -68,6 +68,13 @@ en direct ; Brave les utilise quand son thème est réglé sur GTK (Paramètres 
 Les applis libadwaita les prennent à leur prochain lancement (bloc généré dans
 `~/.config/gtk-4.0/gtk.css`, ignoré par git).
 
+Le terminal foot (`include` de `~/.config/nexus/foot.ini`), Neovim (thème `nexus`, rechargé
+dès que Nexus le réécrit, moonfly en repli) et Equibop (bloc dans son QuickCSS, sur la base
+du thème midnight) prennent aussi ces couleurs. Les fenêtres foot ouvertes changent de mode
+en direct ; un changement d'accent s'applique aux nouvelles fenêtres.
+`bin/brave` retire le `DBUS_SESSION_BUS_ADDRESS=disabled:` hérité quand un agent ouvre Brave,
+sinon il ne suit plus le thème.
+
 Curseur : Bibata Modern Classic (AUR `bibata-cursor-theme-bin`), appliqué à Hyprland,
 GTK et XWayland.
 

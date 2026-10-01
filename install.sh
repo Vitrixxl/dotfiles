@@ -54,6 +54,8 @@ PACKAGES=(
     docker docker-compose docker-buildx
     # Agents de code : Claude Code, Codex CLI et T3 Code (AUR)
     claude-code openai-codex-bin t3code-bin
+    # Discord : Equibop (AUR), ses couleurs suivent le thème Nexus via QuickCSS
+    "equibop|equibop-bin"
     # Steam et pilotes Vulkan/OpenGL 32 bits (dépôt lib32 sur Artix, multilib sur Arch)
     steam lib32-nvidia-utils lib32-vulkan-intel
     # Compilation de hypr-screenshot et Nexus
