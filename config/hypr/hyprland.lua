@@ -29,6 +29,15 @@ hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@144", position = "auto-right
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
 
 -- ── Environnement ────────────────────────────────────────────────────────────
+-- Les raccourcis héritent du PATH de Hyprland, pas de celui du shell interactif.
+do
+    local bin = os.getenv("HOME") .. "/.local/bin"
+    local path = os.getenv("PATH") or "/usr/local/bin:/usr/bin"
+    if not (":" .. path .. ":"):find(":" .. bin .. ":", 1, true) then
+        hl.env("PATH", bin .. ":" .. path)
+    end
+end
+
 -- Bus D-Bus de session. Sur Artix rien n'en exporte l'adresse au login : les
 -- applis GTK le retrouvent via Xwayland (autolaunch), mais Chromium et Electron
 -- (Equibop, Brave, T3 Code…) remplacent une adresse absente par « disabled: »
