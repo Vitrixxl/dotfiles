@@ -1,8 +1,2 @@
 # Couleurs libadwaita générées par Nexus à chaque changement de thème
 config/gtk-4.0/gtk.css
-
-# hypr-screenshot : seuls les sources sont versionnés
-hypr-screenshot/native/target/
-hypr-screenshot/hypr-screenshot-native
-hypr-screenshot/backups/
-hypr-screenshot/__pycache__/

@@ -5,7 +5,7 @@
 #   ./install.sh              tout faire
 #   ./install.sh --no-deps    ne pas installer de paquets
 #   ./install.sh --no-links   ne pas toucher aux symlinks
-#   ./install.sh --no-build   ne pas compiler hypr-screenshot ni installer Nexus
+#   ./install.sh --no-build   ne pas compiler ni installer Nexus
 set -euo pipefail
 
 DOTFILES="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
@@ -39,14 +39,16 @@ PACKAGES=(
     # Brave : rendu WebGL sur la RTX 3050 Ti, via PRIME et XWayland.
     # nvidia-open correspond au noyau linux standard de cette machine.
     brave-bin nvidia-open nvidia-utils nvidia-prime xorg-xwayland desktop-file-utils
-    # Terminal, shell, launcher, notifications, fichiers
-    foot fish fuzzel mako libnotify thunar btop fastfetch
+    # Terminal, shell, launcher, fichiers. Nexus sert lui-même les notifications ;
+    # libnotify fournit notify-send et la bibliothèque qu'utilisent Electron et Brave.
+    foot fish fuzzel libnotify thunar btop fastfetch
     # Audio, touches média, luminosité
     pipewire pipewire-pulse wireplumber playerctl brightnessctl
     # Fond d'écran animé
     mpv mpvpaper
-    # Captures et enregistrement d'écran (hypr-helper, hypr-screenshot, niri-record)
-    jq grim slurp wl-clipboard wf-recorder
+    # jq : hypr-helper et la config Hyprland ; wl-clipboard : captures d'écran Nexus ;
+    # slurp et wf-recorder : enregistrement d'écran (niri-record)
+    jq slurp wl-clipboard wf-recorder
     # Neovim : plugins (git), treesitter (tree-sitter-cli + gcc), LSP (ceux de Vue passent par bun)
     neovim git gcc tree-sitter-cli ripgrep fd
     go gopls "bun|bun-bin" "lua-language-server|lua-language-server-git"
@@ -58,9 +60,10 @@ PACKAGES=(
     "equibop|equibop-bin"
     # Steam et pilotes Vulkan/OpenGL 32 bits (dépôt lib32 sur Artix, multilib sur Arch)
     steam lib32-nvidia-utils lib32-vulkan-intel
-    # Compilation de hypr-screenshot et Nexus
-    rust pkgconf gtk4
-    # Nexus : ConnMan reste son backend, sans modifier le gestionnaire réseau de la distribution
+    # Compilation de Nexus (PAM pour son écran de verrouillage, dbus pour dbus-daemon/dbus-send)
+    rust pkgconf gtk4 pam dbus
+    # Nexus : ConnMan reste son backend, sans modifier le gestionnaire réseau de la distribution.
+    # gtk4-layer-shell fournit aussi gtk4-session-lock (écran de verrouillage).
     gtk4-layer-shell swaybg bluez bluez-utils libpulse polkit
     # Pilote Vulkan de l’iGPU
     vulkan-intel
@@ -263,8 +266,21 @@ link() {                                  # link <source dans le repo> <cible>
     info "lien  $dst -> $src"
 }
 
+# Liens vers des fichiers retirés du dépôt (ancien sélecteur hypr-screenshot, mako) :
+# ils ne pointent plus sur rien et sont supprimés.
+remove_stale_links() {
+    local l
+    for l in "$HOME"/.config/* "$HOME"/.local/bin/* "$HOME/.local/share/hypr-screenshot"; do
+        [ -L "$l" ] && [ ! -e "$l" ] || continue
+        case "$(readlink "$l")" in
+            "$DOTFILES"/*) rm "$l"; info "lien orphelin supprimé : $l" ;;
+        esac
+    done
+}
+
 install_links() {
     local d
+    remove_stale_links
     for d in "$DOTFILES"/config/*; do
         if [ "$(basename "$d")" = pipewire ] && has_systemd; then
             continue                                   # config réservée aux systèmes sans systemd
@@ -297,7 +313,6 @@ install_links() {
     for d in "$DOTFILES"/bin/*; do
         link "$d" "$HOME/.local/bin/$(basename "$d")"
     done
-    link "$DOTFILES/hypr-screenshot" "$HOME/.local/share/hypr-screenshot"
     for d in "$DOTFILES"/applications/*.desktop; do
         link "$d" "$HOME/.local/share/applications/$(basename "$d")"
     done
@@ -305,22 +320,6 @@ install_links() {
         update-desktop-database "$HOME/.local/share/applications" \
             || warn "Cache des lanceurs non actualisé."
     fi
-}
-
-# ── hypr-screenshot (Rust) ───────────────────────────────────────────────────
-build_screenshot() {
-    local dir="$DOTFILES/hypr-screenshot" cargo
-    cargo="$(command -v cargo || true)"
-    [ -z "$cargo" ] && [ -x "$HOME/.cargo/bin/cargo" ] && cargo="$HOME/.cargo/bin/cargo"
-    if [ -x "$dir/hypr-screenshot-native" ] && [ "$dir/hypr-screenshot-native" -nt "$dir/native/src/main.rs" ] \
-        && [ "$dir/hypr-screenshot-native" -nt "$dir/native/src/gpu.rs" ]; then
-        info "hypr-screenshot est à jour."
-        return
-    fi
-    [ -z "$cargo" ] && { warn "cargo introuvable : hypr-screenshot non compilé."; return; }
-    info "Compilation de hypr-screenshot"
-    (cd "$dir/native" && "$cargo" build --release --locked)
-    install -m755 "$dir/native/target/release/hypr-screenshot-native" "$dir/hypr-screenshot-native"
 }
 
 # ── Nexus (Rust + GTK, dépôt séparé) ─────────────────────────────────────────
@@ -344,7 +343,7 @@ install_nexus() {
 
 [ "$do_deps"  = 1 ] && { install_deps; setup_audio; setup_ly; setup_docker; }
 [ "$do_links" = 1 ] && { install_links; setup_cursor; }
-[ "$do_build" = 1 ] && { build_screenshot; install_nexus; }
+[ "$do_build" = 1 ] && install_nexus
 
 if [ "$do_deps" = 1 ]; then
     info "NVIDIA : après la première installation du pilote, redémarre puis vérifie nvidia-smi."

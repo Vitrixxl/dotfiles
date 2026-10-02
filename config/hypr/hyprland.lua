@@ -29,6 +29,49 @@ hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@144", position = "auto-right
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
 
 -- ── Environnement ────────────────────────────────────────────────────────────
+-- Bus D-Bus de session. Sur Artix rien n'en exporte l'adresse au login : les
+-- applis GTK le retrouvent via Xwayland (autolaunch), mais Chromium et Electron
+-- (Equibop, Brave, T3 Code…) remplacent une adresse absente par « disabled: »
+-- et perdent notifications et portails. On exporte donc toujours une adresse :
+-- le bus déjà en place s'il répond, sinon un bus démarré ici.
+do
+    -- Hyprland récupère lui-même ses enfants : os.execute ne voit jamais leur
+    -- code de sortie, d'où la lecture de la sortie.
+    local function alive(address)
+        local p = io.popen(("dbus-send --bus='%s' --dest=org.freedesktop.DBus --print-reply "
+            .. "/org/freedesktop/DBus org.freedesktop.DBus.GetId 2>/dev/null"):format(address))
+        local reply = p:read("a")
+        pcall(p.close, p)
+        return reply:find("string") ~= nil
+    end
+    local current = os.getenv("DBUS_SESSION_BUS_ADDRESS") or ""
+    if not current:find("^unix:") then
+        local runtime = os.getenv("XDG_RUNTIME_DIR") or "/tmp"
+        local candidates = { "unix:path=" .. runtime .. "/bus" }
+        -- Bus lancé par l'autolaunch X11 avant que cette config ne l'exporte.
+        local id = io.open("/etc/machine-id")
+        if id then
+            local file = io.open(os.getenv("HOME") .. "/.dbus/session-bus/" .. id:read("l") .. "-0")
+            id:close()
+            if file then
+                local address = file:read("a"):match("DBUS_SESSION_BUS_ADDRESS='([^']+)'")
+                file:close()
+                if address then table.insert(candidates, address) end
+            end
+        end
+        local address
+        for _, candidate in ipairs(candidates) do
+            if alive(candidate) then address = candidate break end
+        end
+        if not address then
+            address = candidates[1]
+            -- --fork ne rend la main qu'une fois le bus prêt à accepter des clients.
+            os.execute(("rm -f '%s/bus'; dbus-daemon --session --address='%s' --fork --nopidfile --syslog-only")
+                :format(runtime, address))
+        end
+        hl.env("DBUS_SESSION_BUS_ADDRESS", address)
+    end
+end
 hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 hl.env("XDG_SESSION_TYPE", "wayland")
 hl.env("XDG_SESSION_DESKTOP", "Hyprland")
@@ -60,11 +103,12 @@ local mpv_opts = table.concat({
 }, " ")
 
 hl.on("hyprland.start", function()
+    -- Afficher le shell immédiatement ; les services se chargent en arrière-plan.
+    hl.exec_cmd("~/.local/bin/nexus-session")
     -- Avec systemd (Arch), pipewire est un service utilisateur : on ne le lance que sans systemd (Artix).
     hl.exec_cmd("[ -d /run/systemd/system ] || pipewire")
     hl.exec_cmd(('jq -e \".wallpaper != null\" \"$HOME/.config/nexus/settings.json\" >/dev/null 2>&1 || mpvpaper -p -a MAX -o "%s" "*" "$HOME/Wallpapers/window-view-2560.mp4"'):format(mpv_opts))
     hl.exec_cmd("hyprsunset")
-    hl.exec_cmd("~/.local/bin/nexus-session")
 end)
 
 -- ── Entrées ──────────────────────────────────────────────────────────────────
@@ -150,6 +194,13 @@ hl.window_rule({
 hl.layer_rule({
     name    = "nexus-panel-no-anim",
     match   = { namespace = "^nexus-panel$" },
+    no_anim = true,
+})
+-- Capture d'écran Nexus : le sélecteur gère son propre fondu, et un fondu de
+-- sortie d'Hyprland se retrouverait dans la capture en mode direct.
+hl.layer_rule({
+    name    = "nexus-screenshot-no-anim",
+    match   = { namespace = "^nexus-screenshot$" },
     no_anim = true,
 })
 -- Spotify (web-app Brave) toujours sur le workspace S (11)
@@ -279,10 +330,11 @@ hl.bind(key(mod, "V"), hl.dsp.window.float())
 hl.bind(key(shift, "V"), run(helper .. " swap-floating-focus"))
 
 -- Captures
-hl.bind("Print", run("~/.local/bin/hypr-screenshot --live --save"))
-hl.bind("CTRL + Print", run("~/.local/bin/hypr-screenshot screen-to-disk"))
-hl.bind("ALT + Print", run("~/.local/bin/hypr-screenshot window-to-disk"))
-hl.bind(key(shift, "S"), run("~/.local/bin/hypr-screenshot"))
+-- Captures d'écran : sélecteur intégré au shell Nexus (re-presser annule).
+hl.bind("Print", run("nexus screenshot --live --save"))
+hl.bind("CTRL + Print", run("nexus screenshot screen --save"))
+hl.bind("ALT + Print", run("nexus screenshot window --save"))
+hl.bind(key(shift, "S"), run("nexus screenshot"))
 hl.bind(key(shift, "R"), run("~/.local/bin/niri-record"))
 
 -- Passthrough (≈ toggle-keyboard-shortcuts-inhibit) : Mod+Escape pour entrer/sortir

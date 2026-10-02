@@ -1,6 +1,6 @@
 # dotfiles
 
-Mes configs : Hyprland, Nexus, Neovim, foot, fish, mako, btop, GTK, Thunar, pipewire.
+Mes configs : Hyprland, Nexus, Neovim, foot, fish, btop, GTK, Thunar, pipewire.
 Les fichiers vivent ici, `~/.config` pointe dessus par symlink, sauf Hyprland : ses fichiers locaux restent indépendants et sont conservés à l’installation.
 
 ## Installation
@@ -11,8 +11,10 @@ git clone https://github.com/Vitrixxl/dotfiles.git ~/dotfiles
 ```
 
 Le script cible Arch Linux et fonctionne aussi sur Artix. Il installe `yay`, puis toutes les dépendances avec `yay`.
-Il pose ensuite les symlinks, compile `hypr-screenshot` et installe [Nexus](https://github.com/Vitrixxl/nexus)
-(centre de contrôle Rust/GTK et daemon) depuis son dépôt dans `~/.local/bin`. Un fichier déjà présent est
+Il pose ensuite les symlinks et installe [Nexus](https://github.com/Vitrixxl/nexus)
+(barre, launcher, centre de contrôle, notifications, captures d'écran et verrouillage, en Rust/GTK)
+depuis son dépôt dans `~/.local/bin`. Les liens qui pointent vers des fichiers retirés du dépôt
+sont supprimés. Un fichier déjà présent est
 déplacé dans `~/.dotfiles-backup/`, jamais écrasé. Le script peut être relancé sans risque.
 
 Sur un système avec systemd, la config `pipewire` du repo n'est pas liée : le script active les
@@ -75,6 +77,16 @@ en direct ; un changement d'accent s'applique aux nouvelles fenêtres.
 `bin/brave` retire le `DBUS_SESSION_BUS_ADDRESS=disabled:` hérité quand un agent ouvre Brave,
 sinon il ne suit plus le thème.
 
+Nexus est le serveur de notifications (pas de mako). Sans systemd, rien n'exporte l'adresse du
+bus D-Bus de session au login : `hyprland.lua` exporte celle du bus existant, ou en démarre un dans
+`$XDG_RUNTIME_DIR/bus`. Sans cela, Chromium et Electron (Equibop, Brave, T3 Code) remplacent
+l'adresse absente par `disabled:` et leurs notifications n'arrivent jamais.
+
+Captures d'écran (sélecteur intégré à Nexus, PNG copié dans le presse-papiers) :
+`Super+Shift+S` sur l'écran figé, `Impr` sur l'écran en mouvement avec enregistrement dans
+`~/Pictures/screenshots`, `Ctrl+Impr` l'écran entier, `Alt+Impr` la fenêtre active.
+Clic : la fenêtre survolée ; glisser : une zone ; Échap, clic droit ou le même raccourci : annuler.
+
 Curseur : Bibata Modern Classic (AUR `bibata-cursor-theme-bin`), appliqué à Hyprland,
 GTK et XWayland.
 
@@ -118,6 +130,5 @@ cette configuration XWayland reste à tester.
 - `config/` : lié dans `~/.config/`
 - `bin/` : scripts utilisés par Hyprland, liés dans `~/.local/bin/`
 - `applications/` : lanceurs liés dans `~/.local/share/applications/`
-- `hypr-screenshot/` : sélecteur de capture en Rust, lié dans `~/.local/share/`
 
 Le fond d'écran `~/Wallpapers/window-view-2560.mp4` n'est pas versionné.
