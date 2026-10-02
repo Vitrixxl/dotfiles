@@ -60,8 +60,10 @@ page correspondante de Nexus. L’interface de Nexus est en anglais.
 - Appearance : thème clair/sombre, choix du wallpaper et couleurs générées en option.
 
 `nexus-session` démarre le daemon et le shell Nexus depuis Hyprland, avec ou sans systemd.
-Nexus utilise volontairement ConnMan ; le script ne remplace ni n’active le
-gestionnaire réseau existant (NetworkManager reste inchangé).
+Nexus pilote le Wi-Fi par NetworkManager : le script l’active et désactive ConnMan, iwd,
+dhcpcd et systemd-networkd. Si l’un d’eux gérait encore la connexion, il la garde jusqu’au
+redémarrage. Ton utilisateur doit être dans le groupe `wheel` pour enregistrer des réseaux
+depuis Nexus ; sans systemd (Artix), active le service NetworkManager à la main.
 Les wallpapers sélectionnés utilisent `swaybg` et remplacent le fond vidéo.
 Les paramètres et les couleurs générées restent dans `~/.config/nexus`.
 Nexus construit aussi les thèmes GTK `Nexus` / `Nexus-dark` sur adw-gtk3 avec ces couleurs

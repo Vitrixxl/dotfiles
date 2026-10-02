@@ -62,9 +62,10 @@ PACKAGES=(
     steam lib32-nvidia-utils lib32-vulkan-intel
     # Compilation de Nexus (PAM pour son écran de verrouillage, dbus pour dbus-daemon/dbus-send)
     rust pkgconf gtk4 pam dbus
-    # Nexus : ConnMan reste son backend, sans modifier le gestionnaire réseau de la distribution.
-    # gtk4-layer-shell fournit aussi gtk4-session-lock (écran de verrouillage).
-    gtk4-layer-shell swaybg bluez bluez-utils libpulse polkit
+    # Nexus : NetworkManager pilote le Wi-Fi (cf. setup_network) ; polkit laisse le
+    # groupe wheel enregistrer des réseaux. gtk4-layer-shell fournit aussi
+    # gtk4-session-lock (écran de verrouillage).
+    networkmanager gtk4-layer-shell swaybg bluez bluez-utils libpulse polkit
     # Pilote Vulkan de l’iGPU
     vulkan-intel
     # Curseur Bibata Modern Classic (AUR), thème GTK adw-gtk3 que Nexus recolore
@@ -201,6 +202,44 @@ setup_ly() {
         || warn "getty@tty2.service non désactivé."
 }
 
+# ── Réseau ───────────────────────────────────────────────────────────────────
+# Nexus pilote le Wi-Fi par NetworkManager. Un autre gestionnaire se disputerait
+# l'interface : il est désactivé. Celui qui tourne encore garde la connexion
+# jusqu'au redémarrage, le temps de cloner Nexus.
+OTHER_NETWORK_UNITS=(connman.service iwd.service dhcpcd.service
+    systemd-networkd.service systemd-networkd.socket)
+
+setup_network() {
+    local user="${SUDO_USER:-${USER:-$(id -un)}}"
+    if ! id -nG "$user" | tr ' ' '\n' | grep -qx wheel; then
+        warn "$user n'est pas dans le groupe wheel : Nexus ne pourra pas enregistrer de réseau Wi-Fi (sudo usermod -aG wheel $user)."
+    fi
+    if ! has_systemd; then
+        warn "NetworkManager : active son service avec le système d'init de ta distribution et arrête ConnMan."
+        return 0
+    fi
+
+    local unit running=() enabled=()
+    for unit in "${OTHER_NETWORK_UNITS[@]}"; do
+        systemctl is-active --quiet "$unit" && running+=("$unit")
+        [ "$(systemctl is-enabled "$unit" 2>/dev/null)" = enabled ] && enabled+=("$unit")
+    done
+    if [ ${#enabled[@]} -gt 0 ]; then
+        info "Désactivation de ${enabled[*]}"
+        sudo systemctl disable "${enabled[@]}" || warn "Non désactivé : ${enabled[*]}."
+    fi
+    if systemctl is-active --quiet NetworkManager.service || [ ${#running[@]} -gt 0 ]; then
+        info "Activation de NetworkManager au démarrage"
+        sudo systemctl enable NetworkManager.service || warn "NetworkManager non activé."
+    else
+        info "Activation et démarrage de NetworkManager"
+        sudo systemctl enable --now NetworkManager.service || warn "NetworkManager non activé."
+    fi
+    if [ ${#running[@]} -gt 0 ]; then
+        warn "${running[*]} gère encore le réseau : redémarre pour passer à NetworkManager (Wi-Fi de Nexus)."
+    fi
+}
+
 # ── Docker ───────────────────────────────────────────────────────────────────
 setup_docker() {
     command -v dockerd >/dev/null || { warn "Docker non installé : configuration ignorée."; return 0; }
@@ -334,14 +373,10 @@ install_nexus() {
     fi
     info "Compilation et installation de Nexus"
     (cd "$dir" && ./install.sh)
-    # ConnMan est volontairement le seul backend de Nexus pour le moment.
-    # Ne pas remplacer/activer NetworkManager ou ConnMan ici.
-    if ! command -v connmanctl >/dev/null; then
-        warn "Nexus Wi-Fi nécessite ConnMan. Le gestionnaire réseau existant est conservé."
-    fi
+    command -v nmcli >/dev/null || warn "Le Wi-Fi de Nexus nécessite NetworkManager."
 }
 
-[ "$do_deps"  = 1 ] && { install_deps; setup_audio; setup_ly; setup_docker; }
+[ "$do_deps"  = 1 ] && { install_deps; setup_audio; setup_network; setup_ly; setup_docker; }
 [ "$do_links" = 1 ] && { install_links; setup_cursor; }
 [ "$do_build" = 1 ] && install_nexus
 
