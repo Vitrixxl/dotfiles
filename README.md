@@ -88,6 +88,9 @@ Captures d'écran (sélecteur intégré à Nexus, PNG copié dans le presse-papi
 `Super+Shift+S` sur l'écran figé, `Impr` sur l'écran en mouvement avec enregistrement dans
 `~/Pictures/screenshots`, `Ctrl+Impr` l'écran entier, `Alt+Impr` la fenêtre active.
 Clic : la fenêtre survolée ; glisser : une zone ; Échap, clic droit ou le même raccourci : annuler.
+Enregistrement d'écran (wf-recorder, dans `~/Videos/recordings`) : `Super+Shift+R` ou le bouton
+de la barre, avec le même sélecteur ; le même raccourci ou le bouton, rouge pendant l'enregistrement,
+l'arrête. La barre a aussi un bouton de capture, qui enregistre comme `Impr`.
 
 Curseur : Bibata Modern Classic (AUR `bibata-cursor-theme-bin`), appliqué à Hyprland,
 GTK et XWayland.

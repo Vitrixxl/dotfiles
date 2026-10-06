@@ -47,7 +47,7 @@ PACKAGES=(
     # Fond d'écran animé
     mpv mpvpaper
     # jq : hypr-helper et la config Hyprland ; wl-clipboard : captures d'écran Nexus ;
-    # slurp et wf-recorder : enregistrement d'écran (niri-record)
+    # wf-recorder : enregistrement d'écran (Nexus, Super+Shift+R) ; slurp pour niri-record
     jq slurp wl-clipboard wf-recorder
     # Neovim : plugins (git), treesitter (tree-sitter-cli + gcc), LSP (ceux de Vue passent par bun)
     neovim git gcc tree-sitter-cli ripgrep fd

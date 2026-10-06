@@ -344,7 +344,8 @@ hl.bind("Print", run("nexus screenshot --live --save"))
 hl.bind("CTRL + Print", run("nexus screenshot screen --save"))
 hl.bind("ALT + Print", run("nexus screenshot window --save"))
 hl.bind(key(shift, "S"), run("nexus screenshot"))
-hl.bind(key(shift, "R"), run("~/.local/bin/niri-record"))
+-- Enregistrement : même sélecteur, re-presser (ou le bouton de la barre) arrête.
+hl.bind(key(shift, "R"), run("nexus screenshot --record"))
 
 -- Passthrough (≈ toggle-keyboard-shortcuts-inhibit) : Mod+Escape pour entrer/sortir
 hl.bind(key(mod, "Escape"), hl.dsp.submap("passthrough"))
