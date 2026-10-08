@@ -117,7 +117,6 @@ hl.on("hyprland.start", function()
     -- Avec systemd (Arch), pipewire est un service utilisateur : on ne le lance que sans systemd (Artix).
     hl.exec_cmd("[ -d /run/systemd/system ] || pipewire")
     hl.exec_cmd(('jq -e \".wallpaper != null\" \"$HOME/.config/nexus/settings.json\" >/dev/null 2>&1 || mpvpaper -p -a MAX -o "%s" "*" "$HOME/Wallpapers/window-view-2560.mp4"'):format(mpv_opts))
-    hl.exec_cmd("hyprsunset")
 end)
 
 -- ── Entrées ──────────────────────────────────────────────────────────────────

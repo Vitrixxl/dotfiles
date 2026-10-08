@@ -33,7 +33,7 @@ PACKAGES=(
     # Gestionnaire de connexion
     ly
     # Session Hyprland
-    hyprland hyprlock hyprsunset hyprtoolkit
+    hyprland hyprlock hyprtoolkit
     # Portails : partage d'écran sous Hyprland et sélecteur de fichiers GTK
     xdg-desktop-portal xdg-desktop-portal-hyprland xdg-desktop-portal-gtk
     # Brave : rendu WebGL sur la RTX 3050 Ti, via PRIME et XWayland.
